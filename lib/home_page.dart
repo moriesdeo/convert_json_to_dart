@@ -80,8 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -89,62 +89,93 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             TextField(
               controller: _classNameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Class Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _jsonController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Enter JSON',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      contentPadding: const EdgeInsets.all(10.0),
                     ),
                     maxLines: 10,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.paste),
-                  onPressed: _pasteFromClipboard,
-                  tooltip: 'Paste Input',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: _clearInput,
-                  tooltip: 'Clear Input',
-                ),
+                const SizedBox(width: 10),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.paste),
+                      onPressed: _pasteFromClipboard,
+                      tooltip: 'Paste Input',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: _clearInput,
+                      tooltip: 'Clear Input',
+                    ),
+                  ],
+                )
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             Row(
               children: [
                 ElevatedButton(
                   onPressed: _convertJson,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    elevation: 5,
+                  ),
                   child: const Text('Convert'),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 15),
                 ElevatedButton(
                   onPressed: _copyToClipboard,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    elevation: 5,
+                  ),
                   child: const Text('Copy Result'),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Search in Result',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
                     ),
                     onChanged: _filterResults,
                   ),
                 ),
+                const SizedBox(width: 10),
                 IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: _clearSearch,
@@ -155,9 +186,16 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
-                child: Text(
-                  _filteredDartClass,
-                  style: const TextStyle(fontSize: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Text(
+                    _filteredDartClass,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ),
