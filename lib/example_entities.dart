@@ -1,9 +1,33 @@
+class UserResponse {
+  final User user;
+  final Metadata metadata;
+
+  UserResponse({
+    required this.user,
+    required this.metadata,
+  });
+
+  factory UserResponse.fromJson(Map<String, dynamic> json) {
+    return UserResponse(
+      user: User.fromJson(json['user']),
+      metadata: Metadata.fromJson(json['metadata']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user': user.toJson(),
+      'metadata': metadata.toJson(),
+    };
+  }
+}
+
 class User {
   final int id;
   final String name;
   final String email;
   final Settings settings;
-  final List<Post> posts;
+  final List<Posts> posts;
 
   User({
     required this.id,
@@ -19,7 +43,7 @@ class User {
       name: json['name'],
       email: json['email'],
       settings: Settings.fromJson(json['settings']),
-      posts: (json['posts'] as List).map((post) => Post.fromJson(post)).toList(),
+      posts: (json['posts'] as List).map((item) => Posts.fromJson(item)).toList(),
     );
   }
 
@@ -29,7 +53,7 @@ class User {
       'name': name,
       'email': email,
       'settings': settings.toJson(),
-      'posts': posts.map((post) => post.toJson()).toList(),
+      'posts': posts.map((item) => item.toJson()).toList(),
     };
   }
 }
@@ -86,14 +110,14 @@ class Privacy {
   }
 }
 
-class Post {
+class Posts {
   final int id;
   final String title;
   final String content;
   final List<String> tags;
-  final List<Comment> comments;
+  final List<Comments> comments;
 
-  Post({
+  Posts({
     required this.id,
     required this.title,
     required this.content,
@@ -101,13 +125,13 @@ class Post {
     required this.comments,
   });
 
-  factory Post.fromJson(Map<String, dynamic> json) {
-    return Post(
+  factory Posts.fromJson(Map<String, dynamic> json) {
+    return Posts(
       id: json['id'],
       title: json['title'],
       content: json['content'],
       tags: List<String>.from(json['tags']),
-      comments: (json['comments'] as List).map((comment) => Comment.fromJson(comment)).toList(),
+      comments: (json['comments'] as List).map((item) => Comments.fromJson(item)).toList(),
     );
   }
 
@@ -117,24 +141,24 @@ class Post {
       'title': title,
       'content': content,
       'tags': tags,
-      'comments': comments.map((comment) => comment.toJson()).toList(),
+      'comments': comments.map((item) => item.toJson()).toList(),
     };
   }
 }
 
-class Comment {
+class Comments {
   final int id;
   final String author;
   final String content;
 
-  Comment({
+  Comments({
     required this.id,
     required this.author,
     required this.content,
   });
 
-  factory Comment.fromJson(Map<String, dynamic> json) {
-    return Comment(
+  factory Comments.fromJson(Map<String, dynamic> json) {
+    return Comments(
       id: json['id'],
       author: json['author'],
       content: json['content'],

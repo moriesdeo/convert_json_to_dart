@@ -17,7 +17,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _jsonController = TextEditingController();
   final TextEditingController _classNameController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String _dartClass = '';
+  String _filteredDartClass = '';
 
   void _convertJson() {
     final jsonString = _jsonController.text;
@@ -29,16 +31,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
       setState(() {
         _dartClass = dartClass;
+        _filteredDartClass = dartClass;
       });
     } catch (e) {
       setState(() {
         _dartClass = 'Invalid JSON format';
+        _filteredDartClass = 'Invalid JSON format';
       });
     }
   }
 
   void _copyToClipboard() {
-    Clipboard.setData(ClipboardData(text: _dartClass)).then((_) {
+    Clipboard.setData(ClipboardData(text: _filteredDartClass)).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Copied to clipboard')),
       );
@@ -54,6 +58,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _clearInput() {
     _jsonController.clear();
+  }
+
+  void _filterResults(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredDartClass = _dartClass;
+      } else {
+        final lines = _dartClass.split('\n');
+        _filteredDartClass = lines.where((line) => line.toLowerCase().contains(query.toLowerCase())).join('\n');
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _filterResults('');
   }
 
   @override
@@ -112,11 +132,31 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search in Result',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: _filterResults,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: _clearSearch,
+                  tooltip: 'Clear Search',
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
                 child: Text(
-                  _dartClass,
+                  _filteredDartClass,
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
