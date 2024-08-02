@@ -1,8 +1,9 @@
 String jsonToDart(String className, Map<String, dynamic> json) {
   final buffer = StringBuffer();
   buffer.writeln('class $className {');
+
   json.forEach((key, value) {
-    final type = _getType(value);
+    final type = _getType(value, capitalize(key));
     buffer.writeln('  final $type $key;');
   });
 
@@ -14,25 +15,63 @@ String jsonToDart(String className, Map<String, dynamic> json) {
   buffer.writeln('  });');
   buffer.writeln();
   buffer.writeln('  factory $className.fromJson(Map<String, dynamic> json) => $className(');
-  json.forEach((key, _) {
-    buffer.writeln('    $key: json[\'$key\'],');
+  json.forEach((key, value) {
+    final type = _getType(value, capitalize(key));
+    if (type.startsWith('List<')) {
+      final itemType = type.substring(5, type.length - 1);
+      buffer.writeln('    $key: (json[\'$key\'] as List).map((e) => $itemType.fromJson(e)).toList(),');
+    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
+      buffer.writeln('    $key: $type.fromJson(json[\'$key\']),');
+    } else {
+      buffer.writeln('    $key: json[\'$key\'],');
+    }
   });
   buffer.writeln('  );');
   buffer.writeln();
   buffer.writeln('  Map<String, dynamic> toJson() => {');
-  json.forEach((key, _) {
-    buffer.writeln('    \'$key\': $key,');
+  json.forEach((key, value) {
+    final type = _getType(value, capitalize(key));
+    if (type.startsWith('List<')) {
+      buffer.writeln('    \'$key\': $key.map((e) => e.toJson()).toList(),');
+    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
+      buffer.writeln('    \'$key\': $key.toJson(),');
+    } else {
+      buffer.writeln('    \'$key\': $key,');
+    }
   });
   buffer.writeln('  };');
   buffer.writeln('}');
 
+  json.forEach((key, value) {
+    final type = _getType(value, capitalize(key));
+    if (type.startsWith('List<')) {
+      final itemType = type.substring(5, type.length - 1);
+      if (value is List && value.isNotEmpty && value.first is Map) {
+        buffer.writeln(jsonToDart(itemType, (value.first as Map).cast<String, dynamic>()));
+      }
+    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
+      if (value is Map) {
+        buffer.writeln(jsonToDart(type, value.cast<String, dynamic>()));
+      }
+    }
+  });
+
   return buffer.toString();
 }
 
-String _getType(dynamic value) {
+String _getType(dynamic value, String key) {
   if (value is int) return 'int';
   if (value is double) return 'double';
   if (value is bool) return 'bool';
-  if (value is List) return 'List<${_getType(value.first)}>';
+  if (value is List && value.isNotEmpty) {
+    final firstElement = value.first;
+    if (firstElement is Map<String, dynamic>) {
+      return 'List<${capitalize(key)}>';
+    }
+    return 'List<${_getType(firstElement, key)}>';
+  }
+  if (value is Map<String, dynamic>) return capitalize(key);
   return 'String';
 }
+
+String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
