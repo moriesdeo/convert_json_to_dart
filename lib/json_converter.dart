@@ -1,10 +1,5 @@
 String jsonToDart(String className, Map<String, dynamic> json) {
   final buffer = StringBuffer();
-  buffer.writeln('import \'package:json_annotation/json_annotation.dart\';');
-  buffer.writeln();
-  buffer.writeln('part \'${_convertToFileName(className)}.g.dart\';');
-  buffer.writeln();
-  buffer.writeln('@JsonSerializable()');
   buffer.writeln('class $className {');
 
   // Generate class properties
@@ -22,11 +17,38 @@ String jsonToDart(String className, Map<String, dynamic> json) {
   buffer.writeln();
 
   // Factory constructor for JSON deserialization
-  buffer.writeln('  factory $className.fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);');
+  buffer.writeln('  factory $className.fromJson(Map<String, dynamic> json) {');
+  buffer.writeln('    return $className(');
+  json.forEach((key, value) {
+    final type = _getType(value, capitalize(_convertToCamelCase(key)));
+    if (type.startsWith('List<')) {
+      buffer.writeln(
+          '      ${_convertToCamelCase(key)}: (json[\'$key\'] as List).map((item) => ${type.substring(5, type.length - 1)}.fromJson(item)).toList(),');
+    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
+      buffer.writeln('      ${_convertToCamelCase(key)}: $type.fromJson(json[\'$key\']),');
+    } else {
+      buffer.writeln('      ${_convertToCamelCase(key)}: json[\'$key\'],');
+    }
+  });
+  buffer.writeln('    );');
+  buffer.writeln('  }');
   buffer.writeln();
 
   // Method for JSON serialization
-  buffer.writeln('  Map<String, dynamic> toJson() => _\$${className}ToJson(this);');
+  buffer.writeln('  Map<String, dynamic> toJson() {');
+  buffer.writeln('    return {');
+  json.forEach((key, value) {
+    final type = _getType(value, capitalize(_convertToCamelCase(key)));
+    if (type.startsWith('List<')) {
+      buffer.writeln('      \'$key\': ${_convertToCamelCase(key)}.map((item) => item.toJson()).toList(),');
+    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
+      buffer.writeln('      \'$key\': ${_convertToCamelCase(key)}.toJson(),');
+    } else {
+      buffer.writeln('      \'$key\': ${_convertToCamelCase(key)},');
+    }
+  });
+  buffer.writeln('    };');
+  buffer.writeln('  }');
   buffer.writeln('}');
   buffer.writeln();
 
@@ -68,8 +90,4 @@ String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 String _convertToCamelCase(String s) {
   final parts = s.split('_');
   return parts[0] + parts.skip(1).map(capitalize).join();
-}
-
-String _convertToFileName(String className) {
-  return className.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (match) => '${match.group(1)}_${match.group(2)}').toLowerCase();
 }
