@@ -1,0 +1,57 @@
+{
+  "user": {
+    "id": 123,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "settings": {
+      "notifications": true,
+      "theme": "dark",
+      "privacy": {
+        "profileVisibility": "friends",
+        "locationSharing": false
+      }
+    },
+    "posts": [
+      {
+        "id": 1,
+        "title": "My First Post",
+        "content": "This is the content of my first post.",
+        "tags": [
+          "introduction",
+          "first",
+          "welcome"
+        ],
+        "comments": [
+          {
+            "id": 101,
+            "author": "Jane Smith",
+            "content": "Great post!"
+          },
+          {
+            "id": 102,
+            "author": "Alice Johnson",
+            "content": "Thanks for sharing!"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Another Day",
+        "content": "Just another day in paradise.",
+        "tags": [
+          "daily",
+          "life"
+        ],
+        "comments": []
+      }
+    ]
+  },
+  "metadata": {
+    "timestamp": "2024-08-02T10:00:00Z",
+    "requestId": "abc123xyz",
+    "source": {
+      "app": "mobile",
+      "version": "1.4.5"
+    }
+  }
+}
