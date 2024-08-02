@@ -22,8 +22,13 @@ String jsonToDart(String className, Map<String, dynamic> json) {
   json.forEach((key, value) {
     final type = _getType(value, capitalize(_convertToCamelCase(key)));
     if (type.startsWith('List<')) {
-      buffer.writeln(
-          '      ${_convertToCamelCase(key)}: (json[\'$key\'] as List).map((item) => ${type.substring(5, type.length - 1)}.fromJson(item)).toList(),');
+      final itemType = type.substring(5, type.length - 1);
+      if (itemType == 'String' || itemType == 'int' || itemType == 'double' || itemType == 'bool') {
+        buffer.writeln('      ${_convertToCamelCase(key)}: List<$itemType>.from(json[\'$key\']),');
+      } else {
+        buffer.writeln(
+            '      ${_convertToCamelCase(key)}: (json[\'$key\'] as List).map((item) => $itemType.fromJson(item)).toList(),');
+      }
     } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
       buffer.writeln('      ${_convertToCamelCase(key)}: $type.fromJson(json[\'$key\']),');
     } else {
@@ -40,7 +45,12 @@ String jsonToDart(String className, Map<String, dynamic> json) {
   json.forEach((key, value) {
     final type = _getType(value, capitalize(_convertToCamelCase(key)));
     if (type.startsWith('List<')) {
-      buffer.writeln('      \'$key\': ${_convertToCamelCase(key)}.map((item) => item.toJson()).toList(),');
+      final itemType = type.substring(5, type.length - 1);
+      if (itemType == 'String' || itemType == 'int' || itemType == 'double' || itemType == 'bool') {
+        buffer.writeln('      \'$key\': ${_convertToCamelCase(key)},');
+      } else {
+        buffer.writeln('      \'$key\': ${_convertToCamelCase(key)}.map((item) => item.toJson()).toList(),');
+      }
     } else if (type != 'String' && type != 'int' && type != 'double' && type != 'bool') {
       buffer.writeln('      \'$key\': ${_convertToCamelCase(key)}.toJson(),');
     } else {
