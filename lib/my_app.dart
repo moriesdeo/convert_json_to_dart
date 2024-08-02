@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'JSON to Dart Converter'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
