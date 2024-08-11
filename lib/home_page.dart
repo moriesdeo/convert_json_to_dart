@@ -1,9 +1,10 @@
 import 'dart:convert';
 
+import 'package:convert_json_to_class_dart/json_to_kotlin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'json_converter.dart';
+import 'json_to_dart.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -21,13 +22,33 @@ class _MyHomePageState extends State<MyHomePage> {
   String _dartClass = '';
   String _filteredDartClass = '';
 
-  void _convertJson() {
+  void _convertJsonToDart() {
     final jsonString = _jsonController.text;
     final className = _classNameController.text;
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
       final dartClass = jsonToDart(className, jsonMap);
+
+      setState(() {
+        _dartClass = dartClass;
+        _filteredDartClass = dartClass;
+      });
+    } catch (e) {
+      setState(() {
+        _dartClass = 'Invalid JSON format';
+        _filteredDartClass = 'Invalid JSON format';
+      });
+    }
+  }
+
+  void _convertJsonToKotlin() {
+    final jsonString = _jsonController.text;
+    final className = _classNameController.text;
+
+    try {
+      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+      final dartClass = jsonToKotlin(className, jsonMap);
 
       setState(() {
         _dartClass = dartClass;
@@ -135,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               children: [
                 ElevatedButton(
-                  onPressed: _convertJson,
+                  onPressed: _convertJsonToDart,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -143,7 +164,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     elevation: 5,
                   ),
-                  child: const Text('Convert'),
+                  child: const Text('Convert to Dart'),
+                ),
+                const SizedBox(width: 15),
+                ElevatedButton(
+                  onPressed: _convertJsonToKotlin,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    elevation: 5,
+                  ),
+                  child: const Text('Convert to Kotlin'),
                 ),
                 const SizedBox(width: 15),
                 ElevatedButton(

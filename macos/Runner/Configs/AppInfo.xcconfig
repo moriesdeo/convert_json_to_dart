@@ -5,7 +5,7 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = convert_json_to_class_dart
+PRODUCT_NAME = JSON To DART
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.example.convertJsonToClassDart
