@@ -109,8 +109,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        physics: const AlwaysScrollableScrollPhysics(),
-        shrinkWrap: true,
         children: [
           TextField(
             controller: _classNameController,
