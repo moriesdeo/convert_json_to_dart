@@ -1,0 +1,75 @@
+{
+  "company": {
+    "name": "Tech Innovators Inc.",
+    "locations": [
+      {
+        "city": "San Francisco",
+        "employees": [
+          {
+            "name": "John Doe",
+            "position": "Software Engineer",
+            "skills": ["JavaScript", "Python", "Go"],
+            "projects": [
+              {
+                "name": "Project X",
+                "deadline": "2024-12-01",
+                "budget": 120000.75,
+                "status": "ongoing"
+              },
+              {
+                "name": "Project Y",
+                "deadline": "2024-09-15",
+                "budget": 85000.5,
+                "status": "completed"
+              }
+            ]
+          },
+          {
+            "name": "Jane Smith",
+            "position": "Product Manager",
+            "skills": ["Product Design", "UX", "Agile"],
+            "projects": [
+              {
+                "name": "Project Z",
+                "deadline": "2024-11-20",
+                "budget": 95000.0,
+                "status": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "city": "New York",
+        "employees": [
+          {
+            "name": "Alice Johnson",
+            "position": "Data Scientist",
+            "skills": ["R", "Python", "Machine Learning"],
+            "projects": []
+          }
+        ]
+      }
+    ],
+    "departments": {
+      "engineering": {
+        "head": "Robert Brown",
+        "budget": 500000,
+        "goals": ["Innovation", "Efficiency", "Scalability"]
+      },
+      "marketing": {
+        "head": "Emily White",
+        "budget": 300000,
+        "campaigns": [
+          {
+            "name": "Launch Campaign",
+            "platforms": ["Facebook", "Twitter", "Instagram"],
+            "reach": 1000000
+          }
+        ]
+      }
+    },
+    "founded": 2010,
+    "isActive": true
+  }
+}
