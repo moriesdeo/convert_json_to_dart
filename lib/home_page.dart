@@ -107,137 +107,136 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         backgroundColor: Colors.transparent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _classNameController,
-              decoration: InputDecoration(
-                labelText: 'Class Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        shrinkWrap: true,
+        children: [
+          TextField(
+            controller: _classNameController,
+            decoration: InputDecoration(
+              labelText: 'Class Name',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
               ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
             ),
-            const SizedBox(height: 15),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _jsonController,
-                    decoration: InputDecoration(
-                      labelText: 'Enter JSON',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      contentPadding: const EdgeInsets.all(10.0),
-                    ),
-                    maxLines: 10,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.paste),
-                      onPressed: _pasteFromClipboard,
-                      tooltip: 'Paste Input',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: _clearInput,
-                      tooltip: 'Clear Input',
-                    ),
-                  ],
-                )
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: _convertJsonToDart,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
+          ),
+          const SizedBox(height: 15),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _jsonController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter JSON',
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    elevation: 5,
+                    contentPadding: const EdgeInsets.all(10.0),
                   ),
-                  child: const Text('Convert to Dart'),
+                  maxLines: 10,
                 ),
-                const SizedBox(width: 15),
-                ElevatedButton(
-                  onPressed: _convertJsonToKotlin,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    elevation: 5,
+              ),
+              const SizedBox(width: 10),
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.paste),
+                    onPressed: _pasteFromClipboard,
+                    tooltip: 'Paste Input',
                   ),
-                  child: const Text('Convert to Kotlin'),
-                ),
-                const SizedBox(width: 15),
-                ElevatedButton(
-                  onPressed: _copyToClipboard,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    elevation: 5,
+                  IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: _clearInput,
+                    tooltip: 'Clear Input',
                   ),
-                  child: const Text('Copy Result'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      labelText: 'Search in Result',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    ),
-                    onChanged: _filterResults,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: _clearSearch,
-                  tooltip: 'Clear Search',
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Container(
-                  padding: const EdgeInsets.all(10.0),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                ],
+              )
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: _convertJsonToDart,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  child: Text(
-                    _filteredDartClass,
-                    style: const TextStyle(fontSize: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  elevation: 5,
+                ),
+                child: const Text('Convert to Dart'),
+              ),
+              const SizedBox(width: 15),
+              ElevatedButton(
+                onPressed: _convertJsonToKotlin,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  elevation: 5,
+                ),
+                child: const Text('Convert to Kotlin'),
+              ),
+              const SizedBox(width: 15),
+              ElevatedButton(
+                onPressed: _copyToClipboard,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  elevation: 5,
+                ),
+                child: const Text('Copy Result'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: 'Search in Result',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  ),
+                  onChanged: _filterResults,
+                ),
+              ),
+              const SizedBox(width: 10),
+              IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: _clearSearch,
+                tooltip: 'Clear Search',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Text(
+                  _filteredDartClass,
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
