@@ -1,11 +1,12 @@
 String jsonToKotlin(String className, Map<String, dynamic> json) {
   final buffer = StringBuffer();
+  buffer.writeln('@Serializable');
   buffer.writeln('data class $className(');
 
   // Generate class properties
   json.forEach((key, value) {
     final type = _getKotlinType(value, capitalize(_convertToCamelCase(key)));
-    buffer.writeln('    val ${_convertToCamelCase(key)}: $type,');
+    buffer.writeln('    val ${_convertToCamelCase(key)}: $type? = null,');
   });
   buffer.writeln(')');
 
