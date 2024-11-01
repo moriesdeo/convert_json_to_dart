@@ -1,11 +1,12 @@
-String jsonToJava(String className, Map<String, dynamic> json) {
+String jsonToJava(String className, Map<String, dynamic> json, {bool useDummyDefaults = false}) {
   final buffer = StringBuffer();
   buffer.writeln('public class $className {');
 
-  // Generate class properties
+  // Generate class properties with appropriate default values
   json.forEach((key, value) {
     final type = _getJavaType(value, capitalize(_convertToCamelCase(key)));
-    buffer.writeln('  private $type ${_convertToCamelCase(key)};');
+    final defaultValue = useDummyDefaults ? ' = ${_getDefaultValueForJavaType(type)};' : ';';
+    buffer.writeln('  private $type ${_convertToCamelCase(key)}$defaultValue');
   });
 
   buffer.writeln();
@@ -32,11 +33,11 @@ String jsonToJava(String className, Map<String, dynamic> json) {
     if (type.startsWith('List<')) {
       final itemType = type.substring(5, type.length - 1);
       if (value is List && value.isNotEmpty && value.first is Map) {
-        buffer.writeln(jsonToJava(itemType, (value.first as Map).cast<String, dynamic>()));
+        buffer.writeln(jsonToJava(itemType, (value.first as Map).cast<String, dynamic>(), useDummyDefaults: useDummyDefaults));
       }
-    } else if (type != 'String' && type != 'int' && type != 'double' && type != 'boolean') {
+    } else if (!_isPrimitiveJavaType(type)) {
       if (value is Map) {
-        buffer.writeln(jsonToJava(type, value.cast<String, dynamic>()));
+        buffer.writeln(jsonToJava(type, value.cast<String, dynamic>(), useDummyDefaults: useDummyDefaults));
       }
     }
   });
@@ -57,6 +58,27 @@ String _getJavaType(dynamic value, String key) {
   }
   if (value is Map<String, dynamic>) return capitalize(key);
   return 'String';
+}
+
+String _getDefaultValueForJavaType(String type) {
+  // Set dummy default values based on Java types
+  switch (type) {
+    case 'int':
+      return '0';
+    case 'double':
+      return '0.0';
+    case 'boolean':
+      return 'false';
+    case 'String':
+      return '""';
+    default:
+      if (type.startsWith('List<')) return 'new ArrayList<>()';
+      return 'null';
+  }
+}
+
+bool _isPrimitiveJavaType(String type) {
+  return type == 'String' || type == 'int' || type == 'double' || type == 'boolean';
 }
 
 String capitalize(String s) => s[0].toUpperCase() + s.substring(1);

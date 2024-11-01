@@ -44,7 +44,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      final dartClass = jsonToDart(className, jsonMap, nullable: _isNullable, defaultValue: _hasDefaultValue);
+      final dartClass = jsonToDart(
+        className,
+        jsonMap,
+        nullable: _isNullable,
+        defaultValue: _hasDefaultValueDummy,
+      );
 
       setState(() {
         _dartClass = dartClass;
@@ -64,7 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      final kotlinClass = jsonToKotlin(className, jsonMap);
+
+      // Menggunakan `useDummyDefaults` berdasarkan pilihan pengguna
+      final kotlinClass = jsonToKotlin(
+        className,
+        jsonMap,
+        useDummyDefaults: _hasDefaultValueDummy,
+      );
 
       setState(() {
         _dartClass = kotlinClass;
@@ -84,7 +95,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      final javaClass = jsonToJava(className, jsonMap);
+
+      // Menggunakan `useDummyDefaults` berdasarkan pilihan pengguna
+      final javaClass = jsonToJava(
+        className,
+        jsonMap,
+        useDummyDefaults: _hasDefaultValueDummy,
+      );
 
       setState(() {
         _dartClass = javaClass;
