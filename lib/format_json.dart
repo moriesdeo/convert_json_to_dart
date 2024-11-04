@@ -49,14 +49,25 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
   }
 
   void _pasteFromClipboard() async {
-    ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data != null) {
+    try {
+      ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (data != null) {
+        setState(() {
+          _controller.text = data.text!;
+          _formattedJson = '';
+          _errorMessage = '';
+          _copyMessage = '';
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Clipboard is empty or inaccessible';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _controller.text = data.text!;
-        _formattedJson = '';
-        _errorMessage = '';
-        _copyMessage = '';
+        _errorMessage = 'Failed to access clipboard. Please try again.';
       });
+      debugPrint('Clipboard error: $e'); // To log the error for debugging
     }
   }
 
@@ -70,13 +81,64 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     });
   }
 
-  void _copyResultToClipboard() {
+  void _copyResultToClipboard() async {
     if (_formattedJson.isNotEmpty) {
-      Clipboard.setData(ClipboardData(text: _formattedJson));
-      setState(() {
-        _copyMessage = 'Result copied to clipboard!';
-      });
+      try {
+        await Clipboard.setData(ClipboardData(text: _formattedJson));
+        setState(() {
+          _copyMessage = 'Result copied to clipboard!';
+        });
+      } catch (e) {
+        setState(() {
+          _copyMessage = 'Failed to copy result. Please try again.';
+        });
+      }
     }
+  }
+
+  void _selectParameter(String path) {
+    setState(() {
+      final selectedData = _getNestedData(_decodedJson, path.split('.'));
+
+      if (selectedData is List && selectedData.isNotEmpty) {
+        final firstObject = selectedData.first;
+        _formattedJson = const JsonEncoder.withIndent('  ').convert(firstObject);
+      } else {
+        _formattedJson = const JsonEncoder.withIndent('  ').convert(selectedData);
+      }
+    });
+  }
+
+  dynamic _getNestedData(Map<String, dynamic>? json, List<String> pathSegments) {
+    dynamic data = json;
+    for (var segment in pathSegments) {
+      if (data is Map<String, dynamic> && data.containsKey(segment)) {
+        data = data[segment];
+      } else {
+        return null;
+      }
+    }
+    return data;
+  }
+
+  List<Widget> _buildParameterButtons(Map<String, dynamic> json, [String path = '']) {
+    List<Widget> buttons = [];
+    json.forEach((key, value) {
+      final fullPath = path.isEmpty ? key : '$path.$key';
+
+      if (value is Map<String, dynamic> || (value is List && value.isNotEmpty && value.first is Map)) {
+        buttons.add(
+          CustomElevatedButton(
+            onPressed: () => _selectParameter(fullPath),
+            text: key,
+          ),
+        );
+        if (value is Map<String, dynamic>) {
+          buttons.addAll(_buildParameterButtons(value, fullPath));
+        }
+      }
+    });
+    return buttons;
   }
 
   TextSpan _buildColoredJson(String json) {
@@ -142,7 +204,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
             ),
             const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomElevatedButton(
                   onPressed: _pasteFromClipboard,
@@ -152,13 +214,29 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                   onPressed: _clearText,
                   text: 'Clear',
                 ),
+                CustomElevatedButton(
+                  onPressed: _copyResultToClipboard,
+                  text: 'Copy Result',
+                ),
               ],
             ),
+            const SizedBox(height: 20),
+            if (_decodedJson != null)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: _buildParameterButtons(_decodedJson!),
+                  ),
+                ),
+              ),
             const SizedBox(height: 20),
             Expanded(
               child: Row(
                 children: [
-                  // Tampilan sebelah kiri menggunakan SelectableText.rich untuk teks berwarna
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(10),
@@ -174,7 +252,6 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Tampilan sebelah kanan tetap menggunakan JsonViewer
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(10),
@@ -196,11 +273,6 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 10),
-            CustomElevatedButton(
-              onPressed: _copyResultToClipboard,
-              text: 'Copy Result',
             ),
             const SizedBox(height: 10),
             if (_copyMessage.isNotEmpty)
