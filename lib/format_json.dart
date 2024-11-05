@@ -209,14 +209,17 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 CustomElevatedButton(
                   onPressed: _pasteFromClipboard,
                   text: 'Paste',
+                  backgroundColor: Colors.orange,
                 ),
                 CustomElevatedButton(
                   onPressed: _clearText,
                   text: 'Clear',
+                  backgroundColor: Colors.red,
                 ),
                 CustomElevatedButton(
                   onPressed: _copyResultToClipboard,
                   text: 'Copy Result',
+                  backgroundColor: Colors.blueAccent,
                 ),
               ],
             ),

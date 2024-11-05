@@ -21,13 +21,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final TextEditingController _jsonController = TextEditingController();
-  final TextEditingController _classNameController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
+  final _jsonController = TextEditingController();
+  final _classNameController = TextEditingController();
+  final _searchController = TextEditingController();
+
   String _dartClass = '';
   String _filteredDartClass = '';
   bool _isNullable = false;
-  bool _hasDefaultValue = false;
   bool _hasDefaultValueNull = false;
   bool _hasDefaultValueDummy = false;
 
@@ -38,76 +38,37 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _convertJsonToDart() {
-    final jsonString = _jsonController.text;
-    final className = _classNameController.text;
-
-    try {
-      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      final dartClass = jsonToDart(
+  void _convertJsonToDart() => _convertJson((className, jsonMap) => jsonToDart(
         className,
         jsonMap,
         nullable: _isNullable,
         defaultValue: _hasDefaultValueDummy,
-      );
+      ));
 
-      setState(() {
-        _dartClass = dartClass;
-        _filteredDartClass = dartClass;
-      });
-    } catch (e) {
-      setState(() {
-        _dartClass = 'Invalid JSON format';
-        _filteredDartClass = 'Invalid JSON format';
-      });
-    }
-  }
+  void _convertJsonToKotlin() => _convertJson((className, jsonMap) => jsonToKotlin(
+        className,
+        jsonMap,
+        useDummyDefaults: _hasDefaultValueDummy,
+      ));
 
-  void _convertJsonToKotlin() {
+  void _convertJsonToJava() => _convertJson((className, jsonMap) => jsonToJava(
+        className,
+        jsonMap,
+        useDummyDefaults: _hasDefaultValueDummy,
+      ));
+
+  void _convertJson(String Function(String, Map<String, dynamic>) convertFunction) {
     final jsonString = _jsonController.text;
     final className = _classNameController.text;
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-
-      // Menggunakan `useDummyDefaults` berdasarkan pilihan pengguna
-      final kotlinClass = jsonToKotlin(
-        className,
-        jsonMap,
-        useDummyDefaults: _hasDefaultValueDummy,
-      );
-
+      final resultClass = convertFunction(className, jsonMap);
       setState(() {
-        _dartClass = kotlinClass;
-        _filteredDartClass = kotlinClass;
+        _dartClass = resultClass;
+        _filteredDartClass = resultClass;
       });
-    } catch (e) {
-      setState(() {
-        _dartClass = 'Invalid JSON format';
-        _filteredDartClass = 'Invalid JSON format';
-      });
-    }
-  }
-
-  void _convertJsonToJava() {
-    final jsonString = _jsonController.text;
-    final className = _classNameController.text;
-
-    try {
-      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-
-      // Menggunakan `useDummyDefaults` berdasarkan pilihan pengguna
-      final javaClass = jsonToJava(
-        className,
-        jsonMap,
-        useDummyDefaults: _hasDefaultValueDummy,
-      );
-
-      setState(() {
-        _dartClass = javaClass;
-        _filteredDartClass = javaClass;
-      });
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _dartClass = 'Invalid JSON format';
         _filteredDartClass = 'Invalid JSON format';
@@ -123,14 +84,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _toJsonFormatter() {
-    navigateToScreen(
-      context,
-      '',
-      (data) => const JsonFormatterPage(),
-    );
-  }
-
   void _pasteFromClipboard() async {
     final clipboardData = await Clipboard.getData('text/plain');
     if (clipboardData != null) {
@@ -138,18 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _clearInput() {
-    _jsonController.clear();
-  }
+  void _clearInput() => _jsonController.clear();
 
   void _filterResults(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredDartClass = _dartClass;
-      } else {
-        final lines = _dartClass.split('\n');
-        _filteredDartClass = lines.where((line) => line.toLowerCase().contains(query.toLowerCase())).join('\n');
-      }
+      _filteredDartClass = query.isEmpty
+          ? _dartClass
+          : _dartClass.split('\n').where((line) => line.toLowerCase().contains(query.toLowerCase())).join('\n');
     });
   }
 
@@ -171,87 +119,62 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Colors.transparent,
       ),
       body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTextField(
-                    controller: _classNameController,
-                    labelText: 'Class Name',
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _jsonController,
-                          labelText: 'Enter JSON',
-                          maxLines: 10,
-                        ),
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTextField(_classNameController, 'Class Name'),
+                const SizedBox(height: 15),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildTextField(_jsonController, 'Enter JSON', maxLines: 10)),
+                    const SizedBox(width: 10),
+                    Column(
+                      children: [
+                        _buildIconButton(Icons.paste, _pasteFromClipboard, 'Paste Input'),
+                        _buildIconButton(Icons.clear, _clearInput, 'Clear Input'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _buildHorizontalButtonRow(),
+                const SizedBox(height: 20),
+                SingleChoiceCheckBoxList(
+                  options: const ['Default Value Null', 'Default Value Dummy'],
+                  onSelected: _updateDefaultOption,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        _searchController,
+                        'Search in Result',
+                        onChanged: _filterResults,
                       ),
-                      const SizedBox(width: 10),
-                      Column(
-                        children: [
-                          _buildIconButton(
-                            icon: Icons.paste,
-                            onPressed: _pasteFromClipboard,
-                            tooltip: 'Paste Input',
-                          ),
-                          _buildIconButton(
-                            icon: Icons.clear,
-                            onPressed: _clearInput,
-                            tooltip: 'Clear Input',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildHorizontalButtonRow(),
-                  const SizedBox(height: 20),
-                  SingleChoiceCheckBoxList(
-                    options: ['Default Value Null', 'Default Value Dummy'],
-                    onSelected: _updateDefaultOption,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _searchController,
-                          labelText: 'Search in Result',
-                          onChanged: _filterResults,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _buildIconButton(
-                        icon: Icons.clear,
-                        onPressed: _clearSearch,
-                        tooltip: 'Clear Search',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildResultContainer(),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 10),
+                    _buildIconButton(Icons.clear, _clearSearch, 'Clear Search'),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _buildResultContainer(),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
+  Widget _buildTextField(
+    TextEditingController controller,
+    String labelText, {
     int maxLines = 1,
     void Function(String)? onChanged,
   }) {
@@ -269,16 +192,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return IconButton(
-      icon: Icon(icon),
-      onPressed: onPressed,
-      tooltip: tooltip,
-    );
+  Widget _buildIconButton(IconData icon, VoidCallback onPressed, String tooltip) {
+    return IconButton(icon: Icon(icon), onPressed: onPressed, tooltip: tooltip);
   }
 
   Widget _buildHorizontalButtonRow() {
@@ -286,30 +201,26 @@ class _MyHomePageState extends State<MyHomePage> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          CustomElevatedButton(
-            onPressed: _convertJsonToDart,
-            text: 'Convert to Dart',
-          ),
+          CustomElevatedButton(onPressed: _pasteFromClipboard, text: 'Paste Input'),
+          const SizedBox(width: 15),
+          CustomElevatedButton(onPressed: _clearInput, text: 'Clear Input'),
+          const SizedBox(width: 15),
+          CustomElevatedButton(onPressed: _copyToClipboard, text: 'Copy Result'),
+          const SizedBox(width: 15),
+          CustomElevatedButton(onPressed: _convertJsonToDart, text: 'Convert to Dart', backgroundColor: Colors.blue),
           const SizedBox(width: 15),
           CustomElevatedButton(
             onPressed: _convertJsonToKotlin,
             text: 'Convert to Kotlin',
+            backgroundColor: Colors.purpleAccent,
           ),
           const SizedBox(width: 15),
-          CustomElevatedButton(
-            onPressed: _convertJsonToJava,
-            text: 'Convert to Java',
-          ),
+          CustomElevatedButton(onPressed: _convertJsonToJava, text: 'Convert to Java', backgroundColor: Colors.orange),
           const SizedBox(width: 15),
           CustomElevatedButton(
-            onPressed: _copyToClipboard,
-            text: 'Copy Result',
-          ),
-          const SizedBox(width: 15),
-          CustomElevatedButton(
-            onPressed: _toJsonFormatter,
-            text: 'JSON Formatter',
-          ),
+              onPressed: () => navigateToScreen(context, '', (_) => const JsonFormatterPage()),
+              backgroundColor: Colors.pinkAccent,
+              text: 'JSON Formatter'),
         ],
       ),
     );
@@ -332,101 +243,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   TextSpan _buildColoredText(String text) {
     final spans = <TextSpan>[];
-    final lines = text.split('\n');
-
-    for (var line in lines) {
-      final words = line.split(' ');
-
-      for (var word in words) {
-        if (_isClassName(word)) {
-          spans.add(TextSpan(
-            text: '$word ',
-            style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.w600), // Warna untuk nama kelas
-          ));
-        } else if (_isType(word)) {
-          spans.add(TextSpan(
-            text: '$word ',
-            style: const TextStyle(
-                color: Colors.purple, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600), // Warna untuk tipe data
-          ));
-        } else if (_isParameter(word)) {
-          spans.add(TextSpan(
-            text: '$word ',
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600), // Warna untuk parameter
-          ));
-        } else {
-          spans.add(TextSpan(
-            text: '$word ',
-            style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w600), // Warna default hitam
-          ));
-        }
+    for (var line in text.split('\n')) {
+      for (var word in line.split(' ')) {
+        spans.add(TextSpan(
+          text: '$word ',
+          style: _getTextStyleForWord(word),
+        ));
       }
-      spans.add(const TextSpan(text: '\n')); // Baris baru di akhir setiap baris
+      spans.add(const TextSpan(text: '\n'));
     }
-
     return TextSpan(children: spans);
   }
 
-  bool _isClassName(String word) {
-    return RegExp(r'^[A-Z]').hasMatch(word); // Misal: nama kelas dimulai dengan huruf besar
+  TextStyle _getTextStyleForWord(String word) {
+    if (_isClassName(word)) {
+      return const TextStyle(color: Colors.indigo, fontWeight: FontWeight.w600);
+    } else if (_isType(word)) {
+      return const TextStyle(color: Colors.purple, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600);
+    } else if (_isParameter(word)) {
+      return const TextStyle(color: Colors.black, fontWeight: FontWeight.w600);
+    } else {
+      return const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w600);
+    }
   }
 
-  bool _isType(String word) {
-    const types = ['int', 'double', 'String', 'bool', 'List', 'Map'];
-    return types.contains(word); // Misal: tipe data dasar
-  }
+  bool _isClassName(String word) => RegExp(r'^[A-Z]').hasMatch(word);
 
-  bool _isParameter(String word) {
-    return RegExp(r'^[a-z]').hasMatch(word) && !_isType(word); // Parameter mulai dengan huruf kecil
-  }
-}
+  bool _isType(String word) => ['int', 'double', 'String', 'bool', 'List', 'Map'].contains(word);
 
-class CheckBoxItem {
-  final String title;
-  bool isChecked;
-
-  CheckBoxItem({required this.title, this.isChecked = false});
-}
-
-class CheckBoxList extends StatefulWidget {
-  final ValueChanged<String?> onCheckList;
-
-  const CheckBoxList({super.key, required this.onCheckList});
-
-  @override
-  State<CheckBoxList> createState() => _CheckBoxListState();
-}
-
-class _CheckBoxListState extends State<CheckBoxList> {
-  final List<CheckBoxItem> _listCheckBox = [
-    CheckBoxItem(title: 'Nullable'),
-    // CheckBoxItem(title: 'Default Value'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: _listCheckBox.length,
-      shrinkWrap: true,
-      itemBuilder: (context, index) {
-        final item = _listCheckBox[index];
-        return CheckboxListTile(
-          value: item.isChecked,
-          title: Text(item.title),
-          controlAffinity: ListTileControlAffinity.leading,
-          onChanged: (value) {
-            setState(() {
-              for (var checkBoxItem in _listCheckBox) {
-                checkBoxItem.isChecked = false;
-              }
-              item.isChecked = value ?? false;
-            });
-            widget.onCheckList(
-              item.isChecked ? item.title : null,
-            );
-          },
-        );
-      },
-    );
-  }
+  bool _isParameter(String word) => RegExp(r'^[a-z]').hasMatch(word) && !_isType(word);
 }
