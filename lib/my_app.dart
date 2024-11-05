@@ -8,12 +8,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'JSON to Dart or Kotlin Converter',
+      title: 'JSON to Class Converter',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'JSON to Dart or Kotlin Converter'),
+      home: const MyHomePage(title: 'JSON to Class Converter'),
       debugShowCheckedModeBanner: false,
     );
   }
