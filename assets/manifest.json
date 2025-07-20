@@ -1,0 +1,23 @@
+{
+  "short_name": "Mories",
+  "name": "Mories JSON Converter",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007acc",
+  "description": "Converter untuk JSON yang cepat dan mudah.",
+  "icons": [
+    {
+      "src": "/assets/ic_atom.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/ic_atom.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
