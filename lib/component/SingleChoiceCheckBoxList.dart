@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class SingleChoiceCheckBoxList extends StatefulWidget {
   final List<String> options;
@@ -39,10 +38,10 @@ class _SingleChoiceCheckBoxListState extends State<SingleChoiceCheckBoxList> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.08) : AppColors.cardBackground,
+                color: isSelected ? const Color(0xFF6366F1).withOpacity(0.08) : Colors.white,
                 border: Border.all(
                   color: isSelected 
-                      ? AppColors.primary
+                      ? const Color(0xFF6366F1)
                       : Colors.grey.shade300,
                   width: isSelected ? 2 : 1,
                 ),
@@ -50,7 +49,7 @@ class _SingleChoiceCheckBoxListState extends State<SingleChoiceCheckBoxList> {
                 boxShadow: [
                   if (isSelected)
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.12),
+                      color: const Color(0xFF6366F1).withOpacity(0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -69,12 +68,12 @@ class _SingleChoiceCheckBoxListState extends State<SingleChoiceCheckBoxList> {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.primary
+                            ? const Color(0xFF6366F1)
                             : Colors.grey.shade400,
                         width: 2,
                       ),
                       color: isSelected
-                          ? AppColors.primary
+                          ? const Color(0xFF6366F1)
                           : Colors.transparent,
                     ),
                     child: isSelected
@@ -90,8 +89,8 @@ class _SingleChoiceCheckBoxListState extends State<SingleChoiceCheckBoxList> {
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 15,
                       color: isSelected
-                          ? AppColors.primary
-                          : AppColors.bodyText,
+                          ? const Color(0xFF6366F1)
+                          : const Color(0xFF334155),
                       letterSpacing: 0.2,
                     ),
                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'constants/app_colors.dart';
 import 'home_page.dart';
 
 class MyApp extends StatelessWidget {
@@ -13,20 +12,20 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'Inter',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
+          seedColor: const Color(0xFF6366F1),
           brightness: Brightness.light,
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
+          primary: const Color(0xFF6366F1),
+          secondary: const Color(0xFFEC4899),
         ),
-        scaffoldBackgroundColor: AppColors.scaffoldBackground,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: Colors.white,
           elevation: 0.5,
           centerTitle: true,
-          iconTheme: IconThemeData(color: AppColors.icon),
+          iconTheme: IconThemeData(color: Color(0xFF334155)),
           titleTextStyle: TextStyle(
-            color: AppColors.titleText,
+            color: Color(0xFF1E293B),
             fontWeight: FontWeight.bold,
             fontSize: 20,
             fontFamily: 'Inter',
@@ -36,8 +35,8 @@ class MyApp extends StatelessWidget {
           headlineMedium: TextStyle(fontWeight: FontWeight.w700),
           titleLarge: TextStyle(fontWeight: FontWeight.w600),
           titleMedium: TextStyle(fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(color: AppColors.bodyText),
-          bodyMedium: TextStyle(color: AppColors.subtitleText),
+          bodyLarge: TextStyle(color: Color(0xFF334155)),
+          bodyMedium: TextStyle(color: Color(0xFF475569)),
         ),
         inputDecorationTheme: InputDecorationTheme(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -51,18 +50,18 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.focusBorder, width: 2),
+            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
           ),
           filled: true,
-          fillColor: AppColors.cardBackground,
+          fillColor: Colors.white,
           labelStyle: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w500),
-          floatingLabelStyle: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+          floatingLabelStyle: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.w600),
         ),
         cardTheme: CardThemeData(
-          color: AppColors.cardBackground,
+          color: Colors.white,
           elevation: 1,
-          shadowColor: AppColors.primary.withOpacity(0.1),
-          surfaceTintColor: AppColors.cardBackground,
+          shadowColor: const Color(0xFF6366F1).withOpacity(0.1),
+          surfaceTintColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -70,12 +69,12 @@ class MyApp extends StatelessWidget {
             elevation: 1,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: AppColors.primary,
+            backgroundColor: const Color(0xFF6366F1),
             foregroundColor: Colors.white,
           ),
         ),
         dividerTheme: const DividerThemeData(
-          color: AppColors.divider,
+          color: Color(0xFFE2E8F0),
           thickness: 1,
           space: 24,
         ),

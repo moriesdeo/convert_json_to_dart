@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'component/SingleChoiceCheckBoxList.dart';
-import 'constants/app_colors.dart';
 import 'json_to_dart.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -111,12 +110,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: AppColors.primaryGradient,
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -167,8 +166,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.scaffoldBackground,
-                  AppColors.inputBackground,
+                  Color(0xFFF8FAFC),
+                  Color(0xFFF1F5F9),
                 ],
               ),
             ),
@@ -186,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.titleText,
+                          color: Color(0xFF1E293B),
                         ),
                       ),
                     ),
@@ -202,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             Row(
                               children: [
                                 const Icon(Icons.class_,
-                                    size: 20, color: AppColors.primary),
+                                    size: 20, color: Color(0xFF6366F1)),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Class Name',
@@ -237,7 +236,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 Row(
                                   children: [
                                     const Icon(Icons.code,
-                                        size: 20, color: AppColors.primary),
+                                        size: 20, color: Color(0xFF6366F1)),
                                     const SizedBox(width: 8),
                                     Text(
                                       'JSON Input',
@@ -272,7 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             const SizedBox(height: 12),
                             Container(
                               decoration: BoxDecoration(
-                                color: AppColors.inputBackground,
+                                color: const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
@@ -305,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             Row(
                               children: [
                                 const Icon(Icons.settings,
-                                    size: 20, color: AppColors.primary),
+                                    size: 20, color: Color(0xFF6366F1)),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Options',
@@ -342,7 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             Row(
                               children: [
                                 const Icon(Icons.search,
-                                    size: 20, color: AppColors.primary),
+                                    size: 20, color: Color(0xFF6366F1)),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Search Result',
@@ -360,7 +359,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 Expanded(
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: AppColors.inputBackground,
+                                      color: const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                           color: Colors.grey.shade200),
@@ -440,7 +439,36 @@ class _MyHomePageState extends State<MyHomePage> {
       style: TextStyle(
         fontFamily: codeStyle ? 'JetBrains Mono' : 'Inter',
         fontSize: codeStyle ? 14 : 15,
-        color: AppColors.titleText,
+        color: const Color(0xFF1E293B),
+      ),
+    );
+  }
+
+  Widget _buildModernIconButton(
+      IconData icon, VoidCallback onPressed, String tooltip) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.10),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: Colors.blueGrey.shade700),
+            onPressed: onPressed,
+            tooltip: tooltip,
+            splashRadius: 22,
+          ),
+        ),
       ),
     );
   }
@@ -456,7 +484,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.transform, size: 20, color: AppColors.primary),
+                const Icon(Icons.transform, size: 20, color: Color(0xFF6366F1)),
                 const SizedBox(width: 8),
                 Text(
                   'Actions',
@@ -476,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: _convertJsonToDart,
                     text: 'Convert to Dart',
-                    backgroundColor: AppColors.syntaxKeyword,
+                    backgroundColor: const Color(0xFF0EA5E9),
                     child: const Row(
                       children: [
                         Icon(Icons.data_object, size: 18),
@@ -489,7 +517,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: _convertJsonToKotlin,
                     text: 'Convert to Kotlin',
-                    backgroundColor: AppColors.focusBorder,
+                    backgroundColor: const Color(0xFF8B5CF6),
                     child: const Row(
                       children: [
                         Icon(Icons.data_object, size: 18),
@@ -502,7 +530,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: _convertJsonToJava,
                     text: 'Convert to Java',
-                    backgroundColor: AppColors.syntaxDefault,
+                    backgroundColor: const Color(0xFFF97316),
                     child: const Row(
                       children: [
                         Icon(Icons.data_object, size: 18),
@@ -515,7 +543,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: _copyToClipboard,
                     text: 'Copy Result',
-                    backgroundColor: AppColors.focusBorder,
+                    backgroundColor: const Color(0xFF6366F1),
                     child: const Row(
                       children: [
                         Icon(Icons.copy, size: 18),
@@ -528,7 +556,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: () => navigateToScreen(
                         context, '', (_) => const JsonFormatterPage()),
-                    backgroundColor: AppColors.secondary,
+                    backgroundColor: const Color(0xFFEC4899),
                     text: 'JSON Formatter',
                     child: const Row(
                       children: [
@@ -542,7 +570,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CustomElevatedButton(
                     onPressed: () => navigateToScreen(
                         context, '', (_) => const CompareJson()),
-                    backgroundColor: AppColors.syntaxType,
+                    backgroundColor: const Color(0xFFEC4899),
                     text: 'JSON Compare',
                     child: const Row(
                       children: [
@@ -576,7 +604,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.code, size: 20, color: AppColors.primary),
+                    const Icon(Icons.code, size: 20, color: Color(0xFF6366F1)),
                     const SizedBox(width: 8),
                     Text(
                       'Generated Code',
@@ -589,7 +617,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.copy, color: AppColors.primary),
+                  icon: const Icon(Icons.copy, color: Color(0xFF6366F1)),
                   onPressed: _copyToClipboard,
                   tooltip: 'Copy to clipboard',
                   splashRadius: 20,
@@ -599,7 +627,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const Divider(),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.scaffoldBackground,
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade200),
               ),
@@ -634,21 +662,21 @@ class _MyHomePageState extends State<MyHomePage> {
   TextStyle _getTextStyleForWord(String word) {
     if (_isClassName(word)) {
       return const TextStyle(
-          color: AppColors.primary, fontWeight: FontWeight.w600);
+          color: Color(0xFF6366F1), fontWeight: FontWeight.w600);
     } else if (_isType(word)) {
       return const TextStyle(
-          color: AppColors.syntaxType,
+          color: Color(0xFFD946EF),
           fontStyle: FontStyle.italic,
           fontWeight: FontWeight.w600);
     } else if (_isParameter(word)) {
       return const TextStyle(
-          color: AppColors.syntaxParameter, fontWeight: FontWeight.w600);
+          color: Color(0xFF334155), fontWeight: FontWeight.w600);
     } else if (_isKeyword(word)) {
       return const TextStyle(
-          color: AppColors.syntaxKeyword, fontWeight: FontWeight.w600);
+          color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600);
     } else {
       return const TextStyle(
-          color: AppColors.syntaxDefault, fontWeight: FontWeight.w600);
+          color: Color(0xFFF97316), fontWeight: FontWeight.w600);
     }
   }
 
