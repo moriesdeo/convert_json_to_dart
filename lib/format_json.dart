@@ -180,98 +180,322 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     return TextSpan(children: spans);
   }
 
+  // Tambahan: Hitung jumlah parameter di root JSON
+  int _countRootParams(Map<String, dynamic>? json) {
+    if (json == null) return 0;
+    return json.keys.length;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final paramCount = _countRootParams(_decodedJson);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const LinearGradient(
+                colors: [Color(0xFFF6F7FB), Color(0xFFE3E9F7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(const Rect.fromLTWH(0, 0, 500, 500)) !=
+              null
+          ? null
+          : const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: const Text('JSON Formatter'),
-        backgroundColor: Colors.transparent,
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.format_align_left, color: Colors.blueAccent),
+            SizedBox(width: 8),
+            Text('JSON Formatter',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1.5,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              backgroundColor: Colors.blueAccent.withOpacity(0.08),
+              child: const Icon(Icons.code, color: Colors.blueAccent),
+            ),
+          )
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(18.0),
         child: Column(
           children: <Widget>[
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                labelText: 'Enter JSON',
-                hintText: 'Paste your JSON here',
-                errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.white, Colors.blue.shade50],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueAccent.withOpacity(0.07),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              maxLines: 8,
+              child: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: 'Enter JSON',
+                    labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w700, color: Colors.blueGrey),
+                    hintText: 'Paste your JSON here',
+                    errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+                    prefixIcon:
+                        const Icon(Icons.input, color: Colors.blueAccent),
+                  ),
+                  maxLines: 8,
+                  style: const TextStyle(
+                      fontFamily: 'JetBrains Mono', fontSize: 15),
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomElevatedButton(
                   onPressed: _pasteFromClipboard,
-                  text: 'Paste',
                   backgroundColor: Colors.orange,
+                  textColor: Colors.white,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.paste, size: 18, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text('Paste'),
+                    ],
+                  ),
                 ),
                 CustomElevatedButton(
                   onPressed: _clearText,
-                  text: 'Clear',
                   backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.clear, size: 18, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text('Clear'),
+                    ],
+                  ),
                 ),
                 CustomElevatedButton(
                   onPressed: _copyResultToClipboard,
-                  text: 'Copy Result',
                   backgroundColor: Colors.blueAccent,
+                  textColor: Colors.white,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.copy, size: 18, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text('Copy Result'),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             if (_decodedJson != null)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: _buildParameterButtons(_decodedJson!),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blueAccent.withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.list_alt,
+                              color: Colors.blueAccent, size: 18),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Parameter',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
+                                fontSize: 15),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$paramCount',
+                              style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Wrap(
+                          spacing: 8.0,
+                          runSpacing: 4.0,
+                          children: _buildParameterButtons(_decodedJson!)
+                              .map((w) => MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 180),
+                                      curve: Curves.easeInOut,
+                                      child: w,
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Expanded(
               child: Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: SingleChildScrollView(
-                        child: SelectableText.rich(
-                          _buildColoredJson(_formattedJson),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.code,
+                                    color: Colors.deepPurple, size: 18),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Formatted JSON',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                      fontSize: 15),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 18, thickness: 1),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: SelectableText.rich(
+                                  _buildColoredJson(_formattedJson),
+                                  style: const TextStyle(
+                                      fontFamily: 'JetBrains Mono',
+                                      fontSize: 15),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: _decodedJson != null
-                          ? SingleChildScrollView(
-                              child: JsonViewer(_decodedJson!),
-                            )
-                          : const Center(
-                              child: Text(
-                                'Invalid JSON',
-                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal),
-                              ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.visibility,
+                                    color: Colors.teal, size: 18),
+                                SizedBox(width: 6),
+                                Text(
+                                  'JSON Viewer',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.teal,
+                                      fontSize: 15),
+                                ),
+                              ],
                             ),
+                            const Divider(height: 18, thickness: 1),
+                            Expanded(
+                              child: _decodedJson != null
+                                  ? SingleChildScrollView(
+                                      child: JsonViewer(_decodedJson!),
+                                    )
+                                  : const Center(
+                                      child: Text(
+                                        'Invalid JSON',
+                                        style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.normal),
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -279,9 +503,30 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
             ),
             const SizedBox(height: 10),
             if (_copyMessage.isNotEmpty)
-              Text(
-                _copyMessage,
-                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+              AnimatedOpacity(
+                opacity: _copyMessage.isNotEmpty ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle,
+                          color: Colors.green, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        _copyMessage,
+                        style: const TextStyle(
+                            color: Colors.green, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),
