@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:convert_json_to_class_dart/CustomElevatedButton.dart';
 import 'package:convert_json_to_class_dart/compare_json.dart';
 import 'package:convert_json_to_class_dart/format_json.dart';
+import 'package:convert_json_to_class_dart/json_to_golang.dart';
 import 'package:convert_json_to_class_dart/json_to_java.dart';
 import 'package:convert_json_to_class_dart/json_to_kotlin.dart';
 import 'package:convert_json_to_class_dart/utils.dart';
@@ -58,6 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
         jsonMap,
         useDummyDefaults: _hasDefaultValueDummy,
       ));
+
+  void _convertJsonToGolang() =>
+      _convertJson((className, jsonMap) => jsonToGolang(
+            className,
+            jsonMap,
+            useDummyDefaults: _hasDefaultValueDummy,
+          ));
 
   void _convertJson(String Function(String, Map<String, dynamic>) convertFunction) {
     final jsonString = _jsonController.text;
@@ -508,6 +516,19 @@ class _MyHomePageState extends State<MyHomePage> {
                         Icon(Icons.data_object, size: 18),
                         SizedBox(width: 8),
                         Text('Convert to Java'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  CustomElevatedButton(
+                    onPressed: _convertJsonToGolang,
+                    text: 'Convert to Golang',
+                    backgroundColor: AppColors.syntaxDefault,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.data_object, size: 18),
+                        SizedBox(width: 8),
+                        Text('Convert to Golang'),
                       ],
                     ),
                   ),
