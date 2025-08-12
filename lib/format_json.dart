@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 
 import 'CustomElevatedButton.dart';
+import 'constants/app_colors.dart';
 
 class JsonFormatterPage extends StatefulWidget {
   const JsonFormatterPage({super.key});
@@ -155,19 +156,19 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
       final matchText = match.group(0)!;
 
       if (matchText == '{' || matchText == '}') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)));
       } else if (matchText == '[' || matchText == ']') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)));
       } else if (matchText.endsWith('":')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxType, fontWeight: FontWeight.w600)));
       } else if (matchText.startsWith('"') && matchText.endsWith('"')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxKeyword, fontWeight: FontWeight.w600)));
       } else if (RegExp(r'^\d+$').hasMatch(matchText)) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxDefault, fontWeight: FontWeight.w600)));
       } else if (matchText == 'true' || matchText == 'false') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.brown, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)));
       } else {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.black)));
+        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.bodyText)));
       }
 
       lastMatchEnd = match.end;
@@ -192,37 +193,30 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     final paramCount = _countRootParams(_decodedJson);
 
     return Scaffold(
-      backgroundColor: const LinearGradient(
-                colors: [Color(0xFFF6F7FB), Color(0xFFE3E9F7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(const Rect.fromLTWH(0, 0, 500, 500)) !=
-              null
-          ? null
-          : const Color(0xFFF6F7FB),
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.format_align_left, color: Colors.blueAccent),
+            Icon(Icons.format_align_left, color: AppColors.primary),
             SizedBox(width: 8),
             Text('JSON Formatter',
                 style: TextStyle(
-                    color: Colors.black,
+                    color: AppColors.titleText,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5)),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         elevation: 1.5,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: AppColors.icon),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-              backgroundColor: Colors.blueAccent.withOpacity(0.08),
-              child: const Icon(Icons.code, color: Colors.blueAccent),
+              backgroundColor: AppColors.primary.withOpacity(0.08),
+              child: const Icon(Icons.code, color: AppColors.primary),
             ),
           )
         ],
@@ -235,15 +229,15 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOut,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.white, Colors.blue.shade50],
+                gradient: const LinearGradient(
+                  colors: [AppColors.cardBackground, AppColors.inputBackground],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blueAccent.withOpacity(0.07),
+                    color: AppColors.primary.withOpacity(0.07),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -257,11 +251,11 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                     border: InputBorder.none,
                     labelText: 'Enter JSON',
                     labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w700, color: Colors.blueGrey),
+                        fontWeight: FontWeight.w700, color: AppColors.labelText),
                     hintText: 'Paste your JSON here',
                     errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
                     prefixIcon:
-                        const Icon(Icons.input, color: Colors.blueAccent),
+                        const Icon(Icons.input, color: AppColors.primary),
                   ),
                   maxLines: 8,
                   style: const TextStyle(
@@ -275,7 +269,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               children: [
                 CustomElevatedButton(
                   onPressed: _pasteFromClipboard,
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppColors.syntaxDefault,
                   textColor: Colors.white,
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -288,7 +282,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 ),
                 CustomElevatedButton(
                   onPressed: _clearText,
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.secondary,
                   textColor: Colors.white,
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -301,7 +295,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 ),
                 CustomElevatedButton(
                   onPressed: _copyResultToClipboard,
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: AppColors.primary,
                   textColor: Colors.white,
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -320,11 +314,11 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blueAccent.withOpacity(0.06),
+                      color: AppColors.primary.withOpacity(0.06),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -339,13 +333,13 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                       Row(
                         children: [
                           const Icon(Icons.list_alt,
-                              color: Colors.blueAccent, size: 18),
+                              color: AppColors.primary, size: 18),
                           const SizedBox(width: 6),
                           const Text(
                             'Parameter',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blueAccent,
+                                color: AppColors.primary,
                                 fontSize: 15),
                           ),
                           const SizedBox(width: 8),
@@ -353,13 +347,13 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.12),
+                              color: AppColors.primary.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               '$paramCount',
                               style: const TextStyle(
-                                  color: Colors.blueAccent,
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13),
                             ),
@@ -398,11 +392,11 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.06),
+                            color: AppColors.primary.withOpacity(0.06),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -416,13 +410,13 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             const Row(
                               children: [
                                 Icon(Icons.code,
-                                    color: Colors.deepPurple, size: 18),
+                                    color: AppColors.syntaxType, size: 18),
                                 SizedBox(width: 6),
                                 Text(
                                   'Formatted JSON',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.deepPurple,
+                                      color: AppColors.syntaxType,
                                       fontSize: 15),
                                 ),
                               ],
@@ -449,11 +443,11 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.06),
+                            color: AppColors.primary.withOpacity(0.06),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -467,13 +461,13 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             const Row(
                               children: [
                                 Icon(Icons.visibility,
-                                    color: Colors.teal, size: 18),
+                                    color: AppColors.syntaxKeyword, size: 18),
                                 SizedBox(width: 6),
                                 Text(
                                   'JSON Viewer',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.teal,
+                                      color: AppColors.syntaxKeyword,
                                       fontSize: 15),
                                 ),
                               ],
