@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 
-import 'CustomElevatedButton.dart';
+import 'component/button_row.dart';
+import 'component/differences_section.dart';
+import 'component/json_input_section.dart';
+import 'component/json_viewer_container.dart';
+import 'utils/json_formatter.dart';
 
 class CompareJson extends StatefulWidget {
   const CompareJson({super.key});
@@ -233,299 +236,43 @@ class _CompareJsonState extends State<CompareJson> {
   }
 
   TextSpan _buildColoredJson(String json) {
-    final List<TextSpan> spans = [];
-    final regExp = RegExp(r'(".*?":)|(:)|(\d+)|(".*?")|(\[)|(\])|(\{)|(\})|(\btrue\b|\bfalse\b)');
-
-    int lastMatchEnd = 0;
-
-    for (var match in regExp.allMatches(json)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(text: json.substring(lastMatchEnd, match.start)));
-      }
-
-      final matchText = match.group(0)!;
-
-      if (matchText == '{' || matchText == '}') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600)));
-      } else if (matchText == '[' || matchText == ']') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)));
-      } else if (matchText.endsWith('":')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.w600)));
-      } else if (matchText.startsWith('"') && matchText.endsWith('"')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)));
-      } else if (RegExp(r'^\d+$').hasMatch(matchText)) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600)));
-      } else if (matchText == 'true' || matchText == 'false') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.brown, fontWeight: FontWeight.w600)));
-      } else {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: Colors.black)));
-      }
-
-      lastMatchEnd = match.end;
-    }
-
-    if (lastMatchEnd < json.length) {
-      spans.add(TextSpan(text: json.substring(lastMatchEnd)));
-    }
-
-    return TextSpan(children: spans);
+    return JsonFormatter.buildColoredJson(json);
   }
 
   Widget _buildJsonInputSection({required bool isLeft}) {
     final controller = isLeft ? _leftController : _rightController;
     final errorMessage = isLeft ? _leftErrorMessage : _rightErrorMessage;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, isLeft ? Colors.blue.shade50 : Colors.green.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: (isLeft ? Colors.blueAccent : Colors.greenAccent).withOpacity(0.07),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            labelText: isLeft ? 'Left JSON Input' : 'Right JSON Input',
-            labelStyle: TextStyle(
-              fontWeight: FontWeight.w700, 
-              color: isLeft ? Colors.blueGrey : Colors.teal,
-            ),
-            hintText: 'Paste your JSON here',
-            errorText: errorMessage.isNotEmpty ? errorMessage : null,
-            prefixIcon: Icon(
-              Icons.input, 
-              color: isLeft ? Colors.blueAccent : Colors.teal,
-            ),
-          ),
-          maxLines: 8,
-          style: const TextStyle(fontFamily: 'JetBrains Mono', fontSize: 15),
-        ),
-      ),
+    return JsonInputSection(
+      isLeft: isLeft,
+      controller: controller,
+      errorMessage: errorMessage,
     );
   }
 
   Widget _buildButtonRow({required bool isLeft}) {
-    final color = isLeft ? Colors.blueAccent : Colors.teal;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        CustomElevatedButton(
-          onPressed: () => _pasteFromClipboard(isLeft: isLeft),
-          backgroundColor: Colors.orange,
-          textColor: Colors.white,
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.paste, size: 18, color: Colors.white),
-              SizedBox(width: 6),
-              Text('Paste'),
-            ],
-          ),
-        ),
-        CustomElevatedButton(
-          onPressed: () => _clearText(isLeft: isLeft),
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.clear, size: 18, color: Colors.white),
-              SizedBox(width: 6),
-              Text('Clear'),
-            ],
-          ),
-        ),
-        CustomElevatedButton(
-          onPressed: () => _copyResultToClipboard(isLeft: isLeft),
-          backgroundColor: color,
-          textColor: Colors.white,
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.copy, size: 18, color: Colors.white),
-              SizedBox(width: 6),
-              Text('Copy'),
-            ],
-          ),
-        ),
-      ],
+    return ButtonRow(
+      isLeft: isLeft,
+      onPaste: _pasteFromClipboard,
+      onClear: _clearText,
+      onCopy: _copyResultToClipboard,
     );
   }
 
   Widget _buildJsonViewer({required bool isLeft}) {
     final decodedJson = isLeft ? _leftDecodedJson : _rightDecodedJson;
     final formattedJson = isLeft ? _leftFormattedJson : _rightFormattedJson;
-    final titleColor = isLeft ? Colors.deepPurple : Colors.teal;
-    final titleIcon = isLeft ? Icons.format_align_left : Icons.format_align_right;
-    final titleText = isLeft ? 'Left JSON' : 'Right JSON';
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: titleColor.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(titleIcon, color: titleColor, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  titleText,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: titleColor,
-                    fontSize: 15
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 18, thickness: 1),
-            Expanded(
-              child: decodedJson != null
-                ? SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // Formatted text view
-                        SelectableText.rich(
-                          _buildColoredJson(formattedJson),
-                          style: const TextStyle(fontFamily: 'JetBrains Mono', fontSize: 15),
-                        ),
-                        const SizedBox(height: 20),
-                        // Tree view
-                        JsonViewer(decodedJson),
-                      ],
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'No valid JSON',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal),
-                    ),
-                  ),
-            ),
-          ],
-        ),
-      ),
+    return JsonViewerContainer(
+      isLeft: isLeft,
+      decodedJson: decodedJson,
+      formattedJson: formattedJson,
+      buildColoredJson: _buildColoredJson,
     );
   }
 
   Widget _buildDifferencesSection() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.redAccent.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.difference, color: Colors.redAccent, size: 18),
-                const SizedBox(width: 6),
-                const Text(
-                  'Differences',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
-                    fontSize: 15
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (_differences.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${_differences.length}',
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const Divider(height: 18, thickness: 1),
-            _differences.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      'No differences found or invalid JSON',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _differences.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.arrow_right, color: Colors.redAccent),
-                            Expanded(
-                              child: Text(
-                                _differences[index],
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-          ],
-        ),
-      ),
-    );
+    return DifferencesSection(differences: _differences);
   }
 
   @override
