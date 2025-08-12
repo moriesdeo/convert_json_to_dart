@@ -63,10 +63,27 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
       if (data != null) {
         setState(() {
           _controller.text = data.text!;
-          _formattedJson = '';
           _errorMessage = '';
           _copyMessage = '';
         });
+
+        // Automatically try to format and display JSON after pasting
+        try {
+          final decoded = json.decode(data.text!);
+          setState(() {
+            _decodedJson = decoded is Map<String, dynamic> ? decoded : null;
+            if (_decodedJson != null) {
+              _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
+              _copyMessage = 'JSON pasted and formatted successfully!';
+            }
+          });
+        } catch (e) {
+          // If it's not valid JSON, just keep it as plain text
+          setState(() {
+            _formattedJson = '';
+            _decodedJson = null;
+          });
+        }
       } else {
         setState(() {
           _errorMessage = 'Clipboard is empty or inaccessible';
