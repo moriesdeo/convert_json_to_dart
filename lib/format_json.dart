@@ -359,7 +359,8 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final paramCount = _countRootParams(_decodedJson);
+    final paramButtons = _decodedJson != null ? _buildParameterButtons(_decodedJson!) : <Widget>[];
+    final paramCount = paramButtons.length;
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
@@ -595,7 +596,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                         child: Wrap(
                           spacing: 8.0,
                           runSpacing: 4.0,
-                          children: _buildParameterButtons(_decodedJson!)
+                          children: paramButtons
                               .map((w) => MouseRegion(
                                     cursor: SystemMouseCursors.click,
                                     child: AnimatedContainer(
