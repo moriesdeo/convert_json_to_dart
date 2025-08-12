@@ -352,7 +352,6 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     });
   }
 
-  // Tambahan: Hitung jumlah parameter di root JSON
   int _countRootParams(Map<String, dynamic>? json) {
     if (json == null) return 0;
     return json.keys.length;
@@ -360,7 +359,6 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final paramCount = _countRootParams(_decodedJson);
 
     return Scaffold(
@@ -590,36 +588,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.list_alt,
-                              color: AppColors.primary, size: 18),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Parameter',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                                fontSize: 15),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$paramCount',
-                              style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
+                      ParameterHeader(title: 'Parameter', count: paramCount),
                       const SizedBox(height: 8),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -785,6 +754,45 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ParameterHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const ParameterHeader({super.key, required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.list_alt, color: AppColors.primary, size: 18),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+              fontSize: 15),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '$count',
+            style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13),
+          ),
+        ),
+      ],
     );
   }
 }
