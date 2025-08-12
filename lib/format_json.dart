@@ -16,21 +16,27 @@ class JsonFormatterPage extends StatefulWidget {
 
 class _JsonFormatterPageState extends State<JsonFormatterPage> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String _formattedJson = '';
   String _errorMessage = '';
   String _copyMessage = '';
   Map<String, dynamic>? _decodedJson;
+  List<String> _searchResults = [];
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_formatJson);
+    _searchController.addListener(_performSearch);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_formatJson);
+    _searchController.removeListener(_performSearch);
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -38,6 +44,8 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     setState(() {
       _errorMessage = '';
       _copyMessage = '';
+      _searchResults = [];
+      _isSearching = false;
       try {
         _decodedJson = json.decode(_controller.text);
         _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
@@ -75,10 +83,13 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
   void _clearText() {
     setState(() {
       _controller.clear();
+      _searchController.clear();
       _formattedJson = '';
       _errorMessage = '';
       _copyMessage = '';
       _decodedJson = null;
+      _searchResults = [];
+      _isSearching = false;
     });
   }
 
@@ -199,6 +210,129 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     }
 
     return TextSpan(children: spans);
+  }
+
+  // Perform search on JSON data
+  void _performSearch() {
+    final searchTerm = _searchController.text.toLowerCase();
+    setState(() {
+      _isSearching = searchTerm.isNotEmpty;
+      _searchResults = [];
+
+      if (searchTerm.isNotEmpty && _decodedJson != null) {
+        _searchInJson(_decodedJson!, '', searchTerm);
+      } else if (searchTerm.isEmpty && _decodedJson != null) {
+        // When search is cleared, restore the original formatted JSON
+        _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
+      }
+    });
+  }
+
+  // Recursively search through JSON structure
+  void _searchInJson(dynamic json, String path, String searchTerm) {
+    if (json is Map<String, dynamic>) {
+      json.forEach((key, value) {
+        final currentPath = path.isEmpty ? key : '$path.$key';
+
+        // Check if key contains search term
+        if (key.toLowerCase().contains(searchTerm)) {
+          _searchResults.add('$currentPath: ${_getValuePreview(value)}');
+        }
+
+        // Check if value contains search term (for string values)
+        if (value is String && value.toLowerCase().contains(searchTerm)) {
+          _searchResults.add('$currentPath: "$value"');
+        } else if (value is num && value.toString().contains(searchTerm)) {
+          _searchResults.add('$currentPath: $value');
+        } else if (value is bool &&
+            value.toString().toLowerCase().contains(searchTerm)) {
+          _searchResults.add('$currentPath: $value');
+        }
+
+        // Continue searching in nested structures
+        if (value is Map<String, dynamic> || value is List) {
+          _searchInJson(value, currentPath, searchTerm);
+        }
+      });
+    } else if (json is List) {
+      for (int i = 0; i < json.length; i++) {
+        final currentPath = '$path[$i]';
+        final item = json[i];
+
+        // Check if value contains search term (for string values)
+        if (item is String && item.toLowerCase().contains(searchTerm)) {
+          _searchResults.add('$currentPath: "$item"');
+        } else if (item is num && item.toString().contains(searchTerm)) {
+          _searchResults.add('$currentPath: $item');
+        } else if (item is bool &&
+            item.toString().toLowerCase().contains(searchTerm)) {
+          _searchResults.add('$currentPath: $item');
+        }
+
+        // Continue searching in nested structures
+        if (item is Map<String, dynamic> || item is List) {
+          _searchInJson(item, currentPath, searchTerm);
+        }
+      }
+    }
+  }
+
+  // Helper to get a preview of value for search results
+  String _getValuePreview(dynamic value) {
+    if (value is String) return '"${value.length > 30 ? value.substring(0, 27) + '...' : value}"';
+    if (value is Map) return '{...}';
+    if (value is List) return '[...]';
+    return value.toString();
+  }
+
+  // Select specific JSON path from search results
+  void _selectSearchResult(String result) {
+    final pathPart = result.split(':').first.trim();
+
+    // Handle array notation in path
+    List<String> segments = [];
+    RegExp(r'([^\[\]\.])+|\[(\d+)\]').allMatches(pathPart).forEach((match) {
+      final segment = match.group(0);
+      if (segment != null) {
+        if (segment.startsWith('[') && segment.endsWith(']')) {
+          segments.add(segment.substring(1, segment.length - 1));
+        } else {
+          segments.add(segment);
+        }
+      }
+    });
+
+    dynamic data = _decodedJson;
+    for (var segment in segments) {
+      if (data is Map<String, dynamic> && data.containsKey(segment)) {
+        data = data[segment];
+      } else if (data is List && int.tryParse(segment) != null) {
+        final index = int.parse(segment);
+        if (index >= 0 && index < data.length) {
+          data = data[index];
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
+    }
+
+    setState(() {
+      _formattedJson = const JsonEncoder.withIndent('  ').convert(data);
+    });
+  }
+
+  // Clear search results and reset view
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _isSearching = false;
+      _searchResults = [];
+      if (_decodedJson != null) {
+        _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
+      }
+    });
   }
 
   // Tambahan: Hitung jumlah parameter di root JSON
@@ -341,6 +475,82 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 18),
+            if (_decodedJson != null)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.search, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: const InputDecoration(
+                              hintText: 'Search parameters and values...',
+                              border: InputBorder.none,
+                              isDense: true,
+                              hintStyle: TextStyle(fontSize: 14, color: AppColors.labelText),
+                            ),
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        if (_isSearching)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: _clearSearch,
+                            color: AppColors.secondary,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                      ],
+                    ),
+                    if (_isSearching && _searchResults.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            final result = _searchResults[index];
+                            return InkWell(
+                              onTap: () => _selectSearchResult(result),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                child: Text(
+                                  result,
+                                  style: const TextStyle(fontSize: 13, fontFamily: 'JetBrains Mono'),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 18),
             if (_decodedJson != null)
               AnimatedContainer(
