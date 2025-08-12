@@ -97,6 +97,26 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     }
   }
 
+  void _beautifyJson() {
+    if (_controller.text.isNotEmpty) {
+      try {
+        final decoded = json.decode(_controller.text);
+        final beautified = const JsonEncoder.withIndent('  ').convert(decoded);
+        setState(() {
+          _controller.text = beautified;
+          _formattedJson = beautified;
+          _decodedJson = decoded is Map<String, dynamic> ? decoded : null;
+          _errorMessage = '';
+          _copyMessage = 'JSON beautified successfully!';
+        });
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Invalid JSON format';
+        });
+      }
+    }
+  }
+
   void _selectParameter(String path) {
     setState(() {
       final selectedData = _getNestedData(_decodedJson, path.split('.'));
@@ -290,6 +310,19 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                       Icon(Icons.clear, size: 18, color: Colors.white),
                       SizedBox(width: 6),
                       Text('Clear'),
+                    ],
+                  ),
+                ),
+                CustomElevatedButton(
+                  onPressed: _beautifyJson,
+                  backgroundColor: Colors.teal,
+                  textColor: Colors.white,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.format_align_center, size: 18, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text('Beautify'),
                     ],
                   ),
                 ),
