@@ -169,13 +169,15 @@ class _CompareJsonState extends State<CompareJson> {
       if (data != null) {
         setState(() {
           if (isLeft) {
-            _leftController.text = data.text!;
-            _leftFormattedJson = '';
+            _leftController.text = data.text ?? '';
             _leftErrorMessage = '';
+            _copyMessage = '';
+            _formatJson(isLeft: true);
           } else {
-            _rightController.text = data.text!;
-            _rightFormattedJson = '';
+            _rightController.text = data.text ?? '';
             _rightErrorMessage = '';
+            _copyMessage = '';
+            _formatJson(isLeft: false);
           }
           _copyMessage = '';
         });
