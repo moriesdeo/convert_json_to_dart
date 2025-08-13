@@ -2,7 +2,7 @@
 
 A powerful Flutter application that allows you to convert JSON to classes in various programming languages with a beautiful, user-friendly interface.
 
-![App Screenshot](assets/app_screenshot.png)
+![App Screenshot](assets/app-screenshot.png)
 
 ## Features
 
@@ -23,7 +23,8 @@ A powerful Flutter application that allows you to convert JSON to classes in var
 - **List Handling**: Properly handles lists and their item types
 - **Search & Filter**: Search through generated code to find specific elements
 - **Copy to Clipboard**: One-click copy of generated code
-- **Paste from Clipboard**: Quickly paste JSON from clipboard
+- **Paste from Clipboard**: Quickly paste JSON from clipboard with automatic formatting
+- **Auto-Formatting**: Automatically formats and validates JSON when pasted
 
 ### User Interface
 - **Modern Design**: Clean, intuitive interface with beautiful animations
@@ -33,7 +34,7 @@ A powerful Flutter application that allows you to convert JSON to classes in var
 ## How to Use
 
 1. **Enter Class Name**: Provide a name for your primary class (e.g., "User", "Product")
-2. **Input JSON**: Paste your JSON into the input field
+2. **Input JSON**: Paste your JSON into the input field (it will be automatically formatted and validated)
 3. **Select Options**:
    - Choose output language (Dart, Java, Kotlin)
    - Set nullable/default value preferences
@@ -154,8 +155,9 @@ class Address {
 
 ## Requirements
 
-- Flutter 2.0 or higher
-- Dart 2.12 or higher
+- Flutter 3.0 or higher
+- Dart 3.0 or higher
+- Plugins: window_manager, flutter_json_viewer
 
 ## Contributing
 
