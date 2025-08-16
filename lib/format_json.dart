@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 
 import 'CustomElevatedButton.dart';
 import 'constants/app_colors.dart';
+import 'controllers/json_formatter_controller.dart';
 
 class JsonFormatterPage extends StatefulWidget {
   const JsonFormatterPage({super.key});
@@ -15,170 +13,51 @@ class JsonFormatterPage extends StatefulWidget {
 }
 
 class _JsonFormatterPageState extends State<JsonFormatterPage> {
-  final TextEditingController _controller = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
-  String _formattedJson = '';
-  String _errorMessage = '';
-  String _copyMessage = '';
-  Map<String, dynamic>? _decodedJson;
-  List<String> _searchResults = [];
-  bool _isSearching = false;
+  late final JsonFormatterController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_formatJson);
-    _searchController.addListener(_performSearch);
+    _controller = JsonFormatterController();
+    _controller.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_formatJson);
-    _searchController.removeListener(_performSearch);
     _controller.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
-  void _formatJson() {
-    setState(() {
-      _errorMessage = '';
-      _copyMessage = '';
-      _searchResults = [];
-      _isSearching = false;
-      try {
-        _decodedJson = json.decode(_controller.text);
-        _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
-      } catch (e) {
-        _formattedJson = '';
-        _decodedJson = null;
-        _errorMessage = 'Invalid JSON format';
-      }
-    });
-  }
 
   void _pasteFromClipboard() async {
-    try {
-      ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
-      if (data != null) {
-        setState(() {
-          _controller.text = data.text!;
-          _errorMessage = '';
-          _copyMessage = '';
-        });
-
-        // Automatically try to format and display JSON after pasting
-        try {
-          final decoded = json.decode(data.text!);
-          setState(() {
-            _decodedJson = decoded is Map<String, dynamic> ? decoded : null;
-            if (_decodedJson != null) {
-              _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
-              _copyMessage = 'JSON pasted and formatted successfully!';
-            }
-          });
-        } catch (e) {
-          // If it's not valid JSON, just keep it as plain text
-          setState(() {
-            _formattedJson = '';
-            _decodedJson = null;
-          });
-        }
-      } else {
-        setState(() {
-          _errorMessage = 'Clipboard is empty or inaccessible';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to access clipboard. Please try again.';
-      });
-      debugPrint('Clipboard error: $e'); // To log the error for debugging
-    }
+    await _controller.pasteFromClipboard();
   }
 
   void _clearText() {
-    setState(() {
-      _controller.clear();
-      _searchController.clear();
-      _formattedJson = '';
-      _errorMessage = '';
-      _copyMessage = '';
-      _decodedJson = null;
-      _searchResults = [];
-      _isSearching = false;
-    });
+    _controller.clearText();
   }
 
   void _copyResultToClipboard() async {
-    if (_formattedJson.isNotEmpty) {
-      try {
-        await Clipboard.setData(ClipboardData(text: _formattedJson));
-        setState(() {
-          _copyMessage = 'Result copied to clipboard!';
-        });
-      } catch (e) {
-        setState(() {
-          _copyMessage = 'Failed to copy result. Please try again.';
-        });
-      }
-    }
+    await _controller.copyResultToClipboard();
   }
 
   void _beautifyJson() {
-    if (_controller.text.isNotEmpty) {
-      try {
-        final decoded = json.decode(_controller.text);
-        final beautified = const JsonEncoder.withIndent('  ').convert(decoded);
-        setState(() {
-          _controller.text = beautified;
-          _formattedJson = beautified;
-          _decodedJson = decoded is Map<String, dynamic> ? decoded : null;
-          _errorMessage = '';
-          _copyMessage = 'JSON beautified successfully!';
-        });
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Invalid JSON format';
-        });
-      }
-    }
+    _controller.beautifyJson();
   }
 
-  void _selectParameter(String path) {
-    setState(() {
-      final selectedData = _getNestedData(_decodedJson, path.split('.'));
-
-      if (selectedData is List && selectedData.isNotEmpty) {
-        final firstObject = selectedData.first;
-        _formattedJson = const JsonEncoder.withIndent('  ').convert(firstObject);
-      } else {
-        _formattedJson = const JsonEncoder.withIndent('  ').convert(selectedData);
-      }
-    });
-  }
-
-  dynamic _getNestedData(Map<String, dynamic>? json, List<String> pathSegments) {
-    dynamic data = json;
-    for (var segment in pathSegments) {
-      if (data is Map<String, dynamic> && data.containsKey(segment)) {
-        data = data[segment];
-      } else {
-        return null;
-      }
-    }
-    return data;
-  }
-
-  List<Widget> _buildParameterButtons(Map<String, dynamic> json, [String path = '']) {
+  List<Widget> _buildParameterButtons(Map<String, dynamic> json,
+      [String path = '']) {
     List<Widget> buttons = [];
     json.forEach((key, value) {
       final fullPath = path.isEmpty ? key : '$path.$key';
 
-      if (value is Map<String, dynamic> || (value is List && value.isNotEmpty && value.first is Map)) {
+      if (value is Map<String, dynamic> ||
+          (value is List && value.isNotEmpty && value.first is Map)) {
         buttons.add(
           CustomElevatedButton(
-            onPressed: () => _selectParameter(fullPath),
+            onPressed: () => _controller.selectParameter(fullPath),
             text: key,
           ),
         );
@@ -192,7 +71,8 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
 
   TextSpan _buildColoredJson(String json) {
     final List<TextSpan> spans = [];
-    final regExp = RegExp(r'(".*?":)|(:)|(\d+)|(".*?")|(\[)|(\])|(\{)|(\})|(\btrue\b|\bfalse\b)');
+    final regExp = RegExp(
+        r'(".*?":)|(:)|(\d+)|(".*?")|(\[)|(\])|(\{)|(\})|(\btrue\b|\bfalse\b)');
 
     int lastMatchEnd = 0;
 
@@ -204,19 +84,39 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
       final matchText = match.group(0)!;
 
       if (matchText == '{' || matchText == '}') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.primary, fontWeight: FontWeight.w600)));
       } else if (matchText == '[' || matchText == ']') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.secondary, fontWeight: FontWeight.w600)));
       } else if (matchText.endsWith('":')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxType, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.syntaxType, fontWeight: FontWeight.w600)));
       } else if (matchText.startsWith('"') && matchText.endsWith('"')) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxKeyword, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.syntaxKeyword, fontWeight: FontWeight.w600)));
       } else if (RegExp(r'^\d+$').hasMatch(matchText)) {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.syntaxDefault, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.syntaxDefault, fontWeight: FontWeight.w600)));
       } else if (matchText == 'true' || matchText == 'false') {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(
+                color: AppColors.secondary, fontWeight: FontWeight.w600)));
       } else {
-        spans.add(TextSpan(text: matchText, style: const TextStyle(color: AppColors.bodyText)));
+        spans.add(TextSpan(
+            text: matchText,
+            style: const TextStyle(color: AppColors.bodyText)));
       }
 
       lastMatchEnd = match.end;
@@ -229,137 +129,21 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
     return TextSpan(children: spans);
   }
 
-  // Perform search on JSON data
-  void _performSearch() {
-    final searchTerm = _searchController.text.toLowerCase();
-    setState(() {
-      _isSearching = searchTerm.isNotEmpty;
-      _searchResults = [];
 
-      if (searchTerm.isNotEmpty && _decodedJson != null) {
-        _searchInJson(_decodedJson!, '', searchTerm);
-      } else if (searchTerm.isEmpty && _decodedJson != null) {
-        // When search is cleared, restore the original formatted JSON
-        _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
-      }
-    });
-  }
 
-  // Recursively search through JSON structure
-  void _searchInJson(dynamic json, String path, String searchTerm) {
-    if (json is Map<String, dynamic>) {
-      json.forEach((key, value) {
-        final currentPath = path.isEmpty ? key : '$path.$key';
-
-        // Check if key contains search term
-        if (key.toLowerCase().contains(searchTerm)) {
-          _searchResults.add('$currentPath: ${_getValuePreview(value)}');
-        }
-
-        // Check if value contains search term (for string values)
-        if (value is String && value.toLowerCase().contains(searchTerm)) {
-          _searchResults.add('$currentPath: "$value"');
-        } else if (value is num && value.toString().contains(searchTerm)) {
-          _searchResults.add('$currentPath: $value');
-        } else if (value is bool &&
-            value.toString().toLowerCase().contains(searchTerm)) {
-          _searchResults.add('$currentPath: $value');
-        }
-
-        // Continue searching in nested structures
-        if (value is Map<String, dynamic> || value is List) {
-          _searchInJson(value, currentPath, searchTerm);
-        }
-      });
-    } else if (json is List) {
-      for (int i = 0; i < json.length; i++) {
-        final currentPath = '$path[$i]';
-        final item = json[i];
-
-        // Check if value contains search term (for string values)
-        if (item is String && item.toLowerCase().contains(searchTerm)) {
-          _searchResults.add('$currentPath: "$item"');
-        } else if (item is num && item.toString().contains(searchTerm)) {
-          _searchResults.add('$currentPath: $item');
-        } else if (item is bool &&
-            item.toString().toLowerCase().contains(searchTerm)) {
-          _searchResults.add('$currentPath: $item');
-        }
-
-        // Continue searching in nested structures
-        if (item is Map<String, dynamic> || item is List) {
-          _searchInJson(item, currentPath, searchTerm);
-        }
-      }
-    }
-  }
-
-  // Helper to get a preview of value for search results
-  String _getValuePreview(dynamic value) {
-    if (value is String) return '"${value.length > 30 ? value.substring(0, 27) + '...' : value}"';
-    if (value is Map) return '{...}';
-    if (value is List) return '[...]';
-    return value.toString();
-  }
-
-  // Select specific JSON path from search results
   void _selectSearchResult(String result) {
-    final pathPart = result.split(':').first.trim();
-
-    // Handle array notation in path
-    List<String> segments = [];
-    RegExp(r'([^\[\]\.])+|\[(\d+)\]').allMatches(pathPart).forEach((match) {
-      final segment = match.group(0);
-      if (segment != null) {
-        if (segment.startsWith('[') && segment.endsWith(']')) {
-          segments.add(segment.substring(1, segment.length - 1));
-        } else {
-          segments.add(segment);
-        }
-      }
-    });
-
-    dynamic data = _decodedJson;
-    for (var segment in segments) {
-      if (data is Map<String, dynamic> && data.containsKey(segment)) {
-        data = data[segment];
-      } else if (data is List && int.tryParse(segment) != null) {
-        final index = int.parse(segment);
-        if (index >= 0 && index < data.length) {
-          data = data[index];
-        } else {
-          return;
-        }
-      } else {
-        return;
-      }
-    }
-
-    setState(() {
-      _formattedJson = const JsonEncoder.withIndent('  ').convert(data);
-    });
+    _controller.selectSearchResult(result);
   }
 
-  // Clear search results and reset view
   void _clearSearch() {
-    setState(() {
-      _searchController.clear();
-      _isSearching = false;
-      _searchResults = [];
-      if (_decodedJson != null) {
-        _formattedJson = const JsonEncoder.withIndent('  ').convert(_decodedJson);
-      }
-    });
-  }
-
-  int _countRootParams(Map<String, dynamic>? json) {
-    if (json == null) return 0;
-    return json.keys.length;
+    _controller.clearSearch();
   }
 
   @override
   Widget build(BuildContext context) {
-    final paramButtons = _decodedJson != null ? _buildParameterButtons(_decodedJson!) : <Widget>[];
+    final paramButtons = _controller.decodedJson != null
+        ? _buildParameterButtons(_controller.decodedJson!)
+        : <Widget>[];
     final paramCount = paramButtons.length;
 
     return Scaffold(
@@ -416,14 +200,16 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               child: Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: TextField(
-                  controller: _controller,
+                  controller: _controller.inputController,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     labelText: 'Enter JSON',
                     labelStyle: const TextStyle(
                         fontWeight: FontWeight.w700, color: AppColors.labelText),
                     hintText: 'Paste your JSON here',
-                    errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+                    errorText: _controller.errorMessage.isNotEmpty
+                        ? _controller.errorMessage
+                        : null,
                     prefixIcon:
                         const Icon(Icons.input, color: AppColors.primary),
                   ),
@@ -492,7 +278,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               ],
             ),
             const SizedBox(height: 18),
-            if (_decodedJson != null)
+            if (_controller.decodedJson != null)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -516,7 +302,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
-                            controller: _searchController,
+                            controller: _controller.searchController,
                             decoration: const InputDecoration(
                               hintText: 'Search parameters and values...',
                               border: InputBorder.none,
@@ -526,7 +312,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                        if (_isSearching)
+                        if (_controller.isSearching)
                           IconButton(
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: _clearSearch,
@@ -536,7 +322,8 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                           ),
                       ],
                     ),
-                    if (_isSearching && _searchResults.isNotEmpty)
+                    if (_controller.isSearching &&
+                        _controller.searchResults.isNotEmpty)
                       Container(
                         margin: const EdgeInsets.only(top: 10),
                         constraints: const BoxConstraints(maxHeight: 200),
@@ -548,9 +335,9 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                         child: ListView.builder(
                           shrinkWrap: true,
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          itemCount: _searchResults.length,
+                          itemCount: _controller.searchResults.length,
                           itemBuilder: (context, index) {
-                            final result = _searchResults[index];
+                            final result = _controller.searchResults[index];
                             return InkWell(
                               onTap: () => _selectSearchResult(result),
                               child: Padding(
@@ -568,7 +355,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 ),
               ),
             const SizedBox(height: 18),
-            if (_decodedJson != null)
+            if (_controller.decodedJson != null)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -655,7 +442,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             Expanded(
                               child: SingleChildScrollView(
                                 child: SelectableText.rich(
-                                  _buildColoredJson(_formattedJson),
+                                  _buildColoredJson(_controller.formattedJson),
                                   style: const TextStyle(
                                       fontFamily: 'JetBrains Mono',
                                       fontSize: 15),
@@ -704,9 +491,10 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             ),
                             const Divider(height: 18, thickness: 1),
                             Expanded(
-                              child: _decodedJson != null
+                              child: _controller.decodedJson != null
                                   ? SingleChildScrollView(
-                                      child: JsonViewer(_decodedJson!),
+                                      child:
+                                          JsonViewer(_controller.decodedJson!),
                                     )
                                   : const Center(
                                       child: Text(
@@ -726,9 +514,9 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               ),
             ),
             const SizedBox(height: 10),
-            if (_copyMessage.isNotEmpty)
+            if (_controller.copyMessage.isNotEmpty)
               AnimatedOpacity(
-                opacity: _copyMessage.isNotEmpty ? 1.0 : 0.0,
+                opacity: _controller.copyMessage.isNotEmpty ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
                 child: Container(
                   padding:
@@ -744,7 +532,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                           color: Colors.green, size: 18),
                       const SizedBox(width: 6),
                       Text(
-                        _copyMessage,
+                        _controller.copyMessage,
                         style: const TextStyle(
                             color: Colors.green, fontWeight: FontWeight.w600),
                       ),
