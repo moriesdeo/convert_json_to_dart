@@ -112,27 +112,30 @@ class DifferencesSection extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Column(
-                      children: differences
-                          .take(3) // show only first 3 as preview
-                          .map(
-                            (diff) => Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 4.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.arrow_right,
-                                      color: Colors.redAccent),
-                                  Expanded(
-                                    child: Text(diff,
-                                        style: const TextStyle(fontSize: 14)),
+                  : Flexible(
+                      child: ListView.builder(
+                        itemCount: differences.length,
+                        shrinkWrap: true,
+                        itemBuilder: (context, index) {
+                          final diff = differences[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.arrow_right,
+                                    color: Colors.redAccent),
+                                Expanded(
+                                  child: Text(
+                                    diff,
+                                    style: const TextStyle(fontSize: 14),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          )
-                          .toList(),
+                          );
+                        },
+                      ),
                     ),
             ],
           ),

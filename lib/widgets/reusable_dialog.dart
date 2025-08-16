@@ -1,3 +1,4 @@
+import 'package:convert_json_to_class_dart/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../component/custom_text.dart';
@@ -22,6 +23,7 @@ class ReusableDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(24),
+      backgroundColor: AppColors.scaffoldBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Stack(
         children: [
