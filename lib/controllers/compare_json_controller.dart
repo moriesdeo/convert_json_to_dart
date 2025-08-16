@@ -14,8 +14,8 @@ class CompareJsonController {
 
   String copyMessage = '';
 
-  Map<String, dynamic>? leftDecodedJson;
-  Map<String, dynamic>? rightDecodedJson;
+  dynamic leftDecodedJson;
+  dynamic rightDecodedJson;
 
   List<String> differences = [];
 
@@ -75,25 +75,49 @@ class CompareJsonController {
 
     if (leftDecodedJson == null || rightDecodedJson == null) return;
 
-    // Compare root level keys
-    final leftKeys = leftDecodedJson!.keys.toSet();
-    final rightKeys = rightDecodedJson!.keys.toSet();
-
-    final missingInRight = leftKeys.difference(rightKeys);
-    final missingInLeft = rightKeys.difference(leftKeys);
-
-    for (var key in missingInRight) {
-      differences.add('Key "$key" exists in left JSON but missing in right JSON');
+    // Check for type mismatch at root level
+    if (leftDecodedJson.runtimeType != rightDecodedJson.runtimeType) {
+      differences.add('Root type mismatch: ${leftDecodedJson.runtimeType} vs ${rightDecodedJson.runtimeType}');
+      return;
     }
 
-    for (var key in missingInLeft) {
-      differences.add('Key "$key" exists in right JSON but missing in left JSON');
-    }
+    // Handle Maps
+    if (leftDecodedJson is Map<String, dynamic> && rightDecodedJson is Map<String, dynamic>) {
+      // Compare root level keys
+      final leftKeys = (leftDecodedJson as Map<String, dynamic>).keys.toSet();
+      final rightKeys = (rightDecodedJson as Map<String, dynamic>).keys.toSet();
 
-    // Compare common keys
-    final commonKeys = leftKeys.intersection(rightKeys);
-    for (var key in commonKeys) {
-      compareValues(key, leftDecodedJson![key], rightDecodedJson![key], path: key);
+      final missingInRight = leftKeys.difference(rightKeys);
+      final missingInLeft = rightKeys.difference(leftKeys);
+
+      for (var key in missingInRight) {
+        differences.add('Key "$key" exists in left JSON but missing in right JSON');
+      }
+
+      for (var key in missingInLeft) {
+        differences.add('Key "$key" exists in right JSON but missing in left JSON');
+      }
+
+      // Compare common keys
+      final commonKeys = leftKeys.intersection(rightKeys);
+      for (var key in commonKeys) {
+        compareValues(key, leftDecodedJson[key], rightDecodedJson[key], path: key);
+      }
+    } 
+    // Handle Lists
+    else if (leftDecodedJson is List && rightDecodedJson is List) {
+      final leftList = leftDecodedJson as List;
+      final rightList = rightDecodedJson as List;
+
+      if (leftList.length != rightList.length) {
+        differences.add('Root array length mismatch: ${leftList.length} vs ${rightList.length}');
+      }
+
+      final minLength = leftList.length < rightList.length ? leftList.length : rightList.length;
+
+      for (var i = 0; i < minLength; i++) {
+        compareValues('[$i]', leftList[i], rightList[i], path: '[$i]');
+      }
     }
   }
 
@@ -105,7 +129,7 @@ class CompareJsonController {
     }
 
     // Recursive compare for maps
-    if (leftValue is Map<String, dynamic> && rightValue is Map<String, dynamic>) {
+    if (leftValue is Map && rightValue is Map) {
       final leftKeys = leftValue.keys.toSet();
       final rightKeys = rightValue.keys.toSet();
 
@@ -122,7 +146,7 @@ class CompareJsonController {
 
       final commonKeys = leftKeys.intersection(rightKeys);
       for (var key in commonKeys) {
-        compareValues(key, leftValue[key], rightValue[key], path: '$path.$key');
+        compareValues(key.toString(), leftValue[key], rightValue[key], path: '$path.$key');
       }
     }
     // Recursive compare for lists

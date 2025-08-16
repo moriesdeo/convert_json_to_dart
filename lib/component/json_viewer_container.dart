@@ -3,7 +3,7 @@ import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 
 class JsonViewerContainer extends StatelessWidget {
   final bool isLeft;
-  final Map<String, dynamic>? decodedJson;
+  final dynamic decodedJson;
   final String formattedJson;
   final Function(String) buildColoredJson;
 
@@ -67,7 +67,16 @@ class JsonViewerContainer extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         // Tree view
-                        JsonViewer(decodedJson!),
+                        if (decodedJson is Map<String, dynamic>)
+                          JsonViewer(decodedJson as Map<String, dynamic>)
+                        else
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Array JSON content shown in text view above',
+                              style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                            ),
+                          ),
                       ],
                     ),
                   )
