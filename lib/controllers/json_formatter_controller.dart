@@ -10,7 +10,7 @@ class JsonFormatterController extends ChangeNotifier {
   String formattedJson = '';
   String errorMessage = '';
   String copyMessage = '';
-  Map<String, dynamic>? decodedJson;
+  dynamic rootJson;
   List<String> searchResults = [];
   bool isSearching = false;
 
@@ -25,11 +25,11 @@ class JsonFormatterController extends ChangeNotifier {
     searchResults = [];
     isSearching = false;
     try {
-      decodedJson = json.decode(inputController.text);
-      formattedJson = const JsonEncoder.withIndent('  ').convert(decodedJson);
+      rootJson = json.decode(inputController.text);
+      formattedJson = const JsonEncoder.withIndent('  ').convert(rootJson);
     } catch (_) {
       formattedJson = '';
-      decodedJson = null;
+      rootJson = null;
       errorMessage = 'Invalid JSON format';
     }
     notifyListeners();
@@ -43,16 +43,15 @@ class JsonFormatterController extends ChangeNotifier {
         errorMessage = '';
         copyMessage = '';
         try {
-          final decoded = json.decode(data.text!);
-          decodedJson = decoded is Map<String, dynamic> ? decoded : null;
-          if (decodedJson != null) {
+          rootJson = json.decode(data.text!);
+          if (rootJson != null) {
             formattedJson =
-                const JsonEncoder.withIndent('  ').convert(decodedJson);
+                const JsonEncoder.withIndent('  ').convert(rootJson);
             copyMessage = 'JSON pasted and formatted successfully!';
           }
         } catch (_) {
           formattedJson = '';
-          decodedJson = null;
+          rootJson = null;
         }
       } else {
         errorMessage = 'Clipboard is empty or inaccessible';
@@ -69,7 +68,7 @@ class JsonFormatterController extends ChangeNotifier {
     formattedJson = '';
     errorMessage = '';
     copyMessage = '';
-    decodedJson = null;
+    rootJson = null;
     searchResults = [];
     isSearching = false;
     notifyListeners();
@@ -90,11 +89,10 @@ class JsonFormatterController extends ChangeNotifier {
   void beautifyJson() {
     if (inputController.text.isNotEmpty) {
       try {
-        final decoded = json.decode(inputController.text);
-        final beautified = const JsonEncoder.withIndent('  ').convert(decoded);
+        rootJson = json.decode(inputController.text);
+        final beautified = const JsonEncoder.withIndent('  ').convert(rootJson);
         inputController.text = beautified;
         formattedJson = beautified;
-        decodedJson = decoded is Map<String, dynamic> ? decoded : null;
         errorMessage = '';
         copyMessage = 'JSON beautified successfully!';
       } catch (_) {
@@ -108,10 +106,10 @@ class JsonFormatterController extends ChangeNotifier {
     final searchTerm = searchController.text.toLowerCase();
     isSearching = searchTerm.isNotEmpty;
     searchResults = [];
-    if (searchTerm.isNotEmpty && decodedJson != null) {
-      _searchInJson(decodedJson!, '', searchTerm);
-    } else if (searchTerm.isEmpty && decodedJson != null) {
-      formattedJson = const JsonEncoder.withIndent('  ').convert(decodedJson);
+    if (searchTerm.isNotEmpty && rootJson != null) {
+      _searchInJson(rootJson, '', searchTerm);
+    } else if (searchTerm.isEmpty && rootJson != null) {
+      formattedJson = const JsonEncoder.withIndent('  ').convert(rootJson);
     }
     notifyListeners();
   }
@@ -163,11 +161,19 @@ class JsonFormatterController extends ChangeNotifier {
     return value.toString();
   }
 
-  dynamic getNestedData(Map<String, dynamic>? json, List<String> pathSegments) {
+  dynamic getNestedData(dynamic json, List<String> pathSegments) {
     dynamic data = json;
     for (var segment in pathSegments) {
       if (data is Map<String, dynamic> && data.containsKey(segment)) {
         data = data[segment];
+      } else if (data is List) {
+        // Check if segment is a valid numeric index
+        final index = int.tryParse(segment);
+        if (index != null && index >= 0 && index < data.length) {
+          data = data[index];
+        } else {
+          return null;
+        }
       } else {
         return null;
       }
@@ -176,7 +182,7 @@ class JsonFormatterController extends ChangeNotifier {
   }
 
   void selectParameter(String path) {
-    final selectedData = getNestedData(decodedJson, path.split('.'));
+    final selectedData = getNestedData(rootJson, path.split('.'));
 
     if (selectedData is List && selectedData.isNotEmpty) {
       final firstObject = selectedData.first;
@@ -198,7 +204,7 @@ class JsonFormatterController extends ChangeNotifier {
       }
     });
 
-    dynamic data = decodedJson;
+    dynamic data = rootJson;
     for (var segment in segments) {
       if (data is Map<String, dynamic> && data.containsKey(segment)) {
         data = data[segment];
@@ -222,8 +228,8 @@ class JsonFormatterController extends ChangeNotifier {
     searchController.clear();
     isSearching = false;
     searchResults = [];
-    if (decodedJson != null) {
-      formattedJson = const JsonEncoder.withIndent('  ').convert(decodedJson);
+    if (rootJson != null) {
+      formattedJson = const JsonEncoder.withIndent('  ').convert(rootJson);
     }
     notifyListeners();
   }

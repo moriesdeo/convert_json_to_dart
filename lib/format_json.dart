@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 
@@ -66,6 +68,38 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
         }
       }
     });
+    return buttons;
+  }
+
+  List<Widget> _buildArrayParameterButtons(List jsonArray, [String path = '']) {
+    List<Widget> buttons = [];
+
+    // Add buttons for array indexes
+    for (int i = 0; i < jsonArray.length; i++) {
+      final indexPath = path.isEmpty ? '$i' : '$path.$i';
+      buttons.add(
+        CustomElevatedButton(
+          onPressed: () => _controller.selectParameter(indexPath),
+          text: '[$i]',
+        ),
+      );
+
+      // If the array element is an object, add buttons for its keys
+      if (jsonArray[i] is Map<String, dynamic> && i == 0) {
+        // Only show keys from the first object to avoid too many buttons
+        Map<String, dynamic> firstObject = jsonArray[i];
+        firstObject.forEach((key, value) {
+          final fullPath = '$indexPath.$key';
+          buttons.add(
+            CustomElevatedButton(
+              onPressed: () => _controller.selectParameter(fullPath),
+              text: '[$i].$key',
+            ),
+          );
+        });
+      }
+    }
+
     return buttons;
   }
 
@@ -141,9 +175,15 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final paramButtons = _controller.decodedJson != null
-        ? _buildParameterButtons(_controller.decodedJson!)
-        : <Widget>[];
+    List<Widget> paramButtons = <Widget>[];
+    if (_controller.rootJson != null) {
+      if (_controller.rootJson is Map<String, dynamic>) {
+        paramButtons = _buildParameterButtons(_controller.rootJson);
+      } else if (_controller.rootJson is List && _controller.rootJson.isNotEmpty) {
+        // For arrays, create buttons for each index and show keys of first object if possible
+        paramButtons = _buildArrayParameterButtons(_controller.rootJson);
+      }
+    }
     final paramCount = paramButtons.length;
 
     return Scaffold(
@@ -278,7 +318,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
               ],
             ),
             const SizedBox(height: 18),
-            if (_controller.decodedJson != null)
+            if (_controller.rootJson != null)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -355,7 +395,7 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                 ),
               ),
             const SizedBox(height: 18),
-            if (_controller.decodedJson != null)
+            if (_controller.rootJson != null)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -491,10 +531,14 @@ class _JsonFormatterPageState extends State<JsonFormatterPage> {
                             ),
                             const Divider(height: 18, thickness: 1),
                             Expanded(
-                              child: _controller.decodedJson != null
+                              child: _controller.rootJson != null
                                   ? SingleChildScrollView(
-                                      child:
-                                          JsonViewer(_controller.decodedJson!),
+                                      child: _controller.rootJson is Map<String, dynamic>
+                                          ? JsonViewer(_controller.rootJson)
+                                          : SelectableText(
+                                              const JsonEncoder.withIndent('  ').convert(_controller.rootJson),
+                                              style: const TextStyle(fontFamily: 'JetBrains Mono', fontSize: 14),
+                                            ),
                                     )
                                   : const Center(
                                       child: Text(
