@@ -1,12 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'component/button_row.dart';
 import 'component/differences_section.dart';
 import 'component/json_input_section.dart';
 import 'component/json_viewer_container.dart';
+import 'controllers/compare_json_controller.dart';
 import 'utils/json_formatter.dart';
 
 class CompareJson extends StatefulWidget {
@@ -17,233 +15,28 @@ class CompareJson extends StatefulWidget {
 }
 
 class _CompareJsonState extends State<CompareJson> {
-  final TextEditingController _leftController = TextEditingController();
-  final TextEditingController _rightController = TextEditingController();
-
-  String _leftFormattedJson = '';
-  String _rightFormattedJson = '';
-
-  String _leftErrorMessage = '';
-  String _rightErrorMessage = '';
-
-  String _copyMessage = '';
-
-  Map<String, dynamic>? _leftDecodedJson;
-  Map<String, dynamic>? _rightDecodedJson;
-
-  List<String> _differences = [];
+  final CompareJsonController _controller = CompareJsonController();
 
   @override
   void initState() {
     super.initState();
-    _leftController.addListener(() => _formatJson(isLeft: true));
-    _rightController.addListener(() => _formatJson(isLeft: false));
+    _controller.initControllers((fn) => setState(fn));
   }
 
   @override
   void dispose() {
-    _leftController.removeListener(() => _formatJson(isLeft: true));
-    _rightController.removeListener(() => _formatJson(isLeft: false));
-    _leftController.dispose();
-    _rightController.dispose();
+    _controller.disposeControllers();
     super.dispose();
   }
 
-  void _formatJson({required bool isLeft}) {
-    final controller = isLeft ? _leftController : _rightController;
-
-    setState(() {
-      if (isLeft) {
-        _leftErrorMessage = '';
-      } else {
-        _rightErrorMessage = '';
-      }
-
-      _copyMessage = '';
-
-      try {
-        final decodedJson = json.decode(controller.text);
-        final formattedJson = const JsonEncoder.withIndent('  ').convert(decodedJson);
-
-        if (isLeft) {
-          _leftDecodedJson = decodedJson;
-          _leftFormattedJson = formattedJson;
-        } else {
-          _rightDecodedJson = decodedJson;
-          _rightFormattedJson = formattedJson;
-        }
-
-        if (_leftDecodedJson != null && _rightDecodedJson != null) {
-          _findDifferences();
-        }
-      } catch (e) {
-        if (isLeft) {
-          _leftFormattedJson = '';
-          _leftDecodedJson = null;
-          _leftErrorMessage = 'Invalid JSON format';
-        } else {
-          _rightFormattedJson = '';
-          _rightDecodedJson = null;
-          _rightErrorMessage = 'Invalid JSON format';
-        }
-      }
-    });
-  }
-
-  void _findDifferences() {
-    _differences = [];
-
-    if (_leftDecodedJson == null || _rightDecodedJson == null) return;
-
-    // Compare root level keys
-    final leftKeys = _leftDecodedJson!.keys.toSet();
-    final rightKeys = _rightDecodedJson!.keys.toSet();
-
-    final missingInRight = leftKeys.difference(rightKeys);
-    final missingInLeft = rightKeys.difference(leftKeys);
-
-    for (var key in missingInRight) {
-      _differences.add('Key "$key" exists in left JSON but missing in right JSON');
-    }
-
-    for (var key in missingInLeft) {
-      _differences.add('Key "$key" exists in right JSON but missing in left JSON');
-    }
-
-    // Compare common keys
-    final commonKeys = leftKeys.intersection(rightKeys);
-    for (var key in commonKeys) {
-      _compareValues(key, _leftDecodedJson![key], _rightDecodedJson![key], path: key);
-    }
-  }
-
-  void _compareValues(String key, dynamic leftValue, dynamic rightValue, {required String path}) {
-    // Different types
-    if (leftValue.runtimeType != rightValue.runtimeType) {
-      _differences.add('Value type mismatch at "$path": ${leftValue.runtimeType} vs ${rightValue.runtimeType}');
-      return;
-    }
-
-    // Recursive compare for maps
-    if (leftValue is Map<String, dynamic> && rightValue is Map<String, dynamic>) {
-      final leftKeys = leftValue.keys.toSet();
-      final rightKeys = rightValue.keys.toSet();
-
-      final missingInRight = leftKeys.difference(rightKeys);
-      final missingInLeft = rightKeys.difference(leftKeys);
-
-      for (var key in missingInRight) {
-        _differences.add('Key "$key" exists in left JSON but missing in right JSON at "$path"');
-      }
-
-      for (var key in missingInLeft) {
-        _differences.add('Key "$key" exists in right JSON but missing in left JSON at "$path"');
-      }
-
-      final commonKeys = leftKeys.intersection(rightKeys);
-      for (var key in commonKeys) {
-        _compareValues(key, leftValue[key], rightValue[key], path: '$path.$key');
-      }
-    }
-    // Recursive compare for lists
-    else if (leftValue is List && rightValue is List) {
-      if (leftValue.length != rightValue.length) {
-        _differences.add('Array length mismatch at "$path": ${leftValue.length} vs ${rightValue.length}');
-      }
-
-      final minLength = leftValue.length < rightValue.length ? leftValue.length : rightValue.length;
-
-      for (var i = 0; i < minLength; i++) {
-        _compareValues('[$i]', leftValue[i], rightValue[i], path: '$path[$i]');
-      }
-    }
-    // Compare primitive values
-    else if (leftValue != rightValue) {
-      _differences.add('Value mismatch at "$path": $leftValue vs $rightValue');
-    }
-  }
-
-  void _pasteFromClipboard({required bool isLeft}) async {
-    try {
-      ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
-      if (data != null) {
-        setState(() {
-          if (isLeft) {
-            _leftController.text = data.text ?? '';
-            _leftErrorMessage = '';
-            _copyMessage = '';
-            _formatJson(isLeft: true);
-          } else {
-            _rightController.text = data.text ?? '';
-            _rightErrorMessage = '';
-            _copyMessage = '';
-            _formatJson(isLeft: false);
-          }
-          _copyMessage = '';
-        });
-      } else {
-        setState(() {
-          if (isLeft) {
-            _leftErrorMessage = 'Clipboard is empty or inaccessible';
-          } else {
-            _rightErrorMessage = 'Clipboard is empty or inaccessible';
-          }
-        });
-      }
-    } catch (e) {
-      setState(() {
-        if (isLeft) {
-          _leftErrorMessage = 'Failed to access clipboard. Please try again.';
-        } else {
-          _rightErrorMessage = 'Failed to access clipboard. Please try again.';
-        }
-      });
-      debugPrint('Clipboard error: $e');
-    }
-  }
-
-  void _clearText({required bool isLeft}) {
-    setState(() {
-      if (isLeft) {
-        _leftController.clear();
-        _leftFormattedJson = '';
-        _leftErrorMessage = '';
-        _leftDecodedJson = null;
-      } else {
-        _rightController.clear();
-        _rightFormattedJson = '';
-        _rightErrorMessage = '';
-        _rightDecodedJson = null;
-      }
-      _copyMessage = '';
-      _differences = [];
-    });
-  }
-
-  void _copyResultToClipboard({required bool isLeft}) async {
-    final formattedJson = isLeft ? _leftFormattedJson : _rightFormattedJson;
-
-    if (formattedJson.isNotEmpty) {
-      try {
-        await Clipboard.setData(ClipboardData(text: formattedJson));
-        setState(() {
-          _copyMessage = 'JSON copied to clipboard!';
-        });
-      } catch (e) {
-        setState(() {
-          _copyMessage = 'Failed to copy result. Please try again.';
-        });
-      }
-    }
-  }
 
   TextSpan _buildColoredJson(String json) {
     return JsonFormatter.buildColoredJson(json);
   }
 
   Widget _buildJsonInputSection({required bool isLeft}) {
-    final controller = isLeft ? _leftController : _rightController;
-    final errorMessage = isLeft ? _leftErrorMessage : _rightErrorMessage;
+    final controller = isLeft ? _controller.leftController : _controller.rightController;
+    final errorMessage = isLeft ? _controller.leftErrorMessage : _controller.rightErrorMessage;
 
     return JsonInputSection(
       isLeft: isLeft,
@@ -255,15 +48,15 @@ class _CompareJsonState extends State<CompareJson> {
   Widget _buildButtonRow({required bool isLeft}) {
     return ButtonRow(
       isLeft: isLeft,
-      onPaste: _pasteFromClipboard,
-      onClear: _clearText,
-      onCopy: _copyResultToClipboard,
+      onPaste: ({required bool isLeft}) => _controller.pasteFromClipboard(isLeft: isLeft, setState: (fn) => setState(fn)),
+      onClear: ({required bool isLeft}) => _controller.clearText(isLeft: isLeft, setState: (fn) => setState(fn)),
+      onCopy: ({required bool isLeft}) => _controller.copyResultToClipboard(isLeft: isLeft, setState: (fn) => setState(fn)),
     );
   }
 
   Widget _buildJsonViewer({required bool isLeft}) {
-    final decodedJson = isLeft ? _leftDecodedJson : _rightDecodedJson;
-    final formattedJson = isLeft ? _leftFormattedJson : _rightFormattedJson;
+    final decodedJson = isLeft ? _controller.leftDecodedJson : _controller.rightDecodedJson;
+    final formattedJson = isLeft ? _controller.leftFormattedJson : _controller.rightFormattedJson;
 
     return JsonViewerContainer(
       isLeft: isLeft,
@@ -274,7 +67,7 @@ class _CompareJsonState extends State<CompareJson> {
   }
 
   Widget _buildDifferencesSection() {
-    return DifferencesSection(differences: _differences);
+    return DifferencesSection(differences: _controller.differences);
   }
 
   @override
@@ -365,9 +158,9 @@ class _CompareJsonState extends State<CompareJson> {
               ),
             ),
             const SizedBox(height: 10),
-            if (_copyMessage.isNotEmpty)
+                          if (_controller.copyMessage.isNotEmpty)
               AnimatedOpacity(
-                opacity: _copyMessage.isNotEmpty ? 1.0 : 0.0,
+                opacity: _controller.copyMessage.isNotEmpty ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -381,7 +174,7 @@ class _CompareJsonState extends State<CompareJson> {
                       const Icon(Icons.check_circle, color: Colors.green, size: 18),
                       const SizedBox(width: 6),
                       Text(
-                        _copyMessage,
+                        _controller.copyMessage,
                         style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
                       ),
                     ],
