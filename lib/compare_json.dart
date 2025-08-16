@@ -4,6 +4,7 @@ import 'component/button_row.dart';
 import 'component/differences_section.dart';
 import 'component/json_input_section.dart';
 import 'component/json_viewer_container.dart';
+import 'constants/app_colors.dart';
 import 'controllers/compare_json_controller.dart';
 import 'utils/json_formatter.dart';
 
@@ -73,40 +74,33 @@ class _CompareJsonState extends State<CompareJson> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const LinearGradient(
-                colors: [Color(0xFFF6F7FB), Color(0xFFE3E9F7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(const Rect.fromLTWH(0, 0, 500, 500)) !=
-              null
-          ? null
-          : const Color(0xFFF6F7FB),
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.compare_arrows, color: Colors.deepPurple),
+            Icon(Icons.compare_arrows, color: AppColors.primary),
             SizedBox(width: 8),
             Text(
               'JSON Comparator',
               style: TextStyle(
-                color: Colors.black,
+                color: AppColors.titleText,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         elevation: 1.5,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: AppColors.icon),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-              backgroundColor: Colors.deepPurple.withOpacity(0.08),
-              child: const Icon(Icons.code, color: Colors.deepPurple),
+              backgroundColor: AppColors.primary.withOpacity(0.08),
+              child: const Icon(Icons.code, color: AppColors.primary),
             ),
           )
         ],
@@ -165,17 +159,17 @@ class _CompareJsonState extends State<CompareJson> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.12),
+                    color: AppColors.secondary.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                      const Icon(Icons.check_circle, color: AppColors.secondary, size: 18),
                       const SizedBox(width: 6),
                       Text(
                         _controller.copyMessage,
-                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                        style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
